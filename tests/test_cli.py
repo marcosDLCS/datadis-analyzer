@@ -91,3 +91,69 @@ def test_cli_summary_nonexistent_directory(tmp_path: Path) -> None:
     result = runner.invoke(app, ["summary", "-i", str(missing_dir)])
     assert result.exit_code == 1
     assert "Error:" in result.stdout
+
+
+def test_cli_cleanup_empty_directory(tmp_path: Path) -> None:
+    """The 'da cleanup' on empty directory should notify without error."""
+    out_dir = tmp_path / "empty_out"
+    out_dir.mkdir()
+    result = runner.invoke(app, ["cleanup", "-o", str(out_dir), "-f", "--lang", "en"])
+    assert result.exit_code == 0
+    assert "already empty" in result.stdout
+
+
+def test_cli_cleanup_removes_files_force(tmp_path: Path) -> None:
+    """The 'da cleanup --force' should delete files without interactive confirmation."""
+    out_dir = tmp_path / "report_out"
+    out_dir.mkdir()
+    f1 = out_dir / "report1.md"
+    f2 = out_dir / "report2.md"
+    f1.write_text("sample 1", encoding="utf-8")
+    f2.write_text("sample 2", encoding="utf-8")
+
+    assert f1.exists() and f2.exists()
+
+    result = runner.invoke(app, ["cleanup", "-o", str(out_dir), "--force", "--lang", "en"])
+    assert result.exit_code == 0
+    assert "Successfully removed 2 file(s)" in result.stdout
+    assert not f1.exists()
+    assert not f2.exists()
+
+
+def test_cli_cleanup_interactive_confirm(tmp_path: Path) -> None:
+    """The 'da cleanup' with 'y' input should confirm and delete files."""
+    out_dir = tmp_path / "confirm_out"
+    out_dir.mkdir()
+    f1 = out_dir / "report.md"
+    f1.write_text("sample", encoding="utf-8")
+
+    result = runner.invoke(app, ["cleanup", "-o", str(out_dir), "--lang", "en"], input="y\n")
+    assert result.exit_code == 0
+    assert "Successfully removed 1 file(s)" in result.stdout
+    assert not f1.exists()
+
+
+def test_cli_cleanup_interactive_abort(tmp_path: Path) -> None:
+    """The 'da cleanup' with 'n' input should abort and preserve files."""
+    out_dir = tmp_path / "abort_out"
+    out_dir.mkdir()
+    f1 = out_dir / "report.md"
+    f1.write_text("sample", encoding="utf-8")
+
+    result = runner.invoke(app, ["cleanup", "-o", str(out_dir), "--lang", "en"], input="n\n")
+    assert result.exit_code == 0
+    assert "Cleanup aborted" in result.stdout
+    assert f1.exists()
+
+
+def test_cli_clean_alias(tmp_path: Path) -> None:
+    """The 'da clean' alias should execute cleanup identically."""
+    out_dir = tmp_path / "clean_alias_out"
+    out_dir.mkdir()
+    f1 = out_dir / "test.md"
+    f1.write_text("content", encoding="utf-8")
+
+    result = runner.invoke(app, ["clean", "-o", str(out_dir), "-f", "--lang", "es"])
+    assert result.exit_code == 0
+    assert "Se han eliminado 1 archivo(s)" in result.stdout
+    assert not f1.exists()

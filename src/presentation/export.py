@@ -1,5 +1,6 @@
 """Markdown report generator exporting community energy summaries to .output/."""
 
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -222,3 +223,27 @@ def export_markdown_summary(
     report_content = "\n".join(lines) + "\n"
     report_path.write_text(report_content, encoding="utf-8")
     return report_path
+
+
+def cleanup_output_directory(output_dir: Path = DEFAULT_OUTPUT_DIR) -> list[Path]:
+    """Remove all files and subdirectories from the specified output directory.
+
+    Args:
+        output_dir: Directory to clear (default: ./.output).
+
+    Returns:
+        Sorted list of Path objects for all deleted items.
+    """
+    if not output_dir.exists() or not output_dir.is_dir():
+        return []
+
+    removed: list[Path] = []
+    for item in sorted(output_dir.iterdir()):
+        if item.is_file():
+            item.unlink()
+            removed.append(item)
+        elif item.is_dir():
+            shutil.rmtree(item)
+            removed.append(item)
+
+    return removed

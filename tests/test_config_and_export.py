@@ -16,7 +16,7 @@ from src.config import (
 )
 from src.i18n import t
 from src.ingestion.loader import DatadisLoader
-from src.presentation.export import export_markdown_summary
+from src.presentation.export import cleanup_output_directory, export_markdown_summary
 from src.processing.aggregator import DataAggregator
 
 runner = CliRunner()
@@ -171,3 +171,20 @@ def test_ensure_directories_creates_and_is_idempotent(tmp_path: Path) -> None:
     p_in_2, p_out_2 = ensure_directories(config=config)
     assert p_in_2.is_dir()
     assert p_out_2.is_dir()
+
+
+def test_cleanup_output_directory_handles_subdirs_and_nonexistent(tmp_path: Path) -> None:
+    """cleanup_output_directory removes files/subdirs and returns empty list for nonexistent dir."""
+    missing_dir = tmp_path / "nonexistent"
+    assert cleanup_output_directory(missing_dir) == []
+
+    test_dir = tmp_path / "cleanup_test"
+    test_dir.mkdir()
+    (test_dir / "sample.txt").write_text("hello", encoding="utf-8")
+    sub_dir = test_dir / "sub"
+    sub_dir.mkdir()
+    (sub_dir / "nested.txt").write_text("nested", encoding="utf-8")
+
+    removed = cleanup_output_directory(test_dir)
+    assert len(removed) == 2
+    assert list(test_dir.iterdir()) == []

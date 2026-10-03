@@ -13,12 +13,14 @@ from src.config import (
     normalize_language_code,
     set_language,
 )
+from src.i18n import t
 from src.ingestion.loader import DatadisLoader
 from src.ingestion.schema import DatadisError
 from src.presentation.console import console
-from src.presentation.export import export_markdown_summary
+from src.presentation.export import cleanup_output_directory, export_markdown_summary
 from src.presentation.views import (
     render_annual_tables,
+    render_cleanup_result,
     render_community_overview,
     render_cups_trajectory,
     render_detailed_monthly_breakdown,
@@ -90,6 +92,81 @@ def init_cmd(
         output_dir=output_dir,
         lang=lang_code,
     )
+
+
+@app.command(name="cleanup")
+def cleanup_cmd(
+    output_dir: Path = typer.Option(
+        DEFAULT_OUTPUT_DIR,
+        "--output-dir",
+        "-o",
+        help="Directory containing reports to remove (default: ./.output).",
+        exists=False,
+        file_okay=False,
+        dir_okay=True,
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force deletion without interactive confirmation prompt.",
+    ),
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        "-l",
+        help="Language for output messages ('en' or 'es').",
+    ),
+) -> None:
+    """Remove generated reports and clear files from the .output directory."""
+    effective_lang = lang or get_language()
+
+    if not output_dir.exists() or not any(output_dir.iterdir()):
+        render_cleanup_result([], output_dir=output_dir, lang=effective_lang)
+        return
+
+    existing_items = list(output_dir.iterdir())
+    if not force:
+        confirmed = typer.confirm(
+            t(
+                "cleanup_confirm",
+                lang=effective_lang,
+                count=len(existing_items),
+                dir=str(output_dir),
+            ),
+            default=False,
+        )
+        if not confirmed:
+            console.print(f"\n[yellow]{t('cleanup_aborted', lang=effective_lang)}[/yellow]\n")
+            raise typer.Exit(code=0)
+
+    removed = cleanup_output_directory(output_dir)
+    render_cleanup_result(removed, output_dir=output_dir, lang=effective_lang)
+
+
+@app.command(name="clean", hidden=True)
+def clean_alias(
+    output_dir: Path = typer.Option(
+        DEFAULT_OUTPUT_DIR,
+        "--output-dir",
+        "-o",
+        help="Directory containing reports to remove (default: ./.output).",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force deletion without interactive confirmation prompt.",
+    ),
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        "-l",
+        help="Language for output messages ('en' or 'es').",
+    ),
+) -> None:
+    """Alias for 'cleanup'."""
+    cleanup_cmd(output_dir=output_dir, force=force, lang=lang)
 
 
 @app.command(name="summary")

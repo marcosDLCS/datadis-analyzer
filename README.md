@@ -238,6 +238,22 @@ da summary --cups ES0021000000000001AA
 da summary --input-dir /path/to/custom_input
 ```
 
+### 🧹 4. Output Cleanup (`da cleanup` / `da clean`)
+Remove all generated reports and clear files from the `./.output/` folder:
+
+```bash
+# Interactive cleanup (prompts for confirmation [y/N]):
+da cleanup
+
+# Force cleanup without confirmation (ideal for CI/scripts):
+da cleanup --force
+# or short alias:
+da clean -f
+
+# Clean a custom output folder:
+da cleanup --output-dir /path/to/custom_output -f
+```
+
 ---
 
 ## 🧪 Quality Assurance & Tooling

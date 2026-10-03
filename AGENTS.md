@@ -130,6 +130,11 @@ da summary --cups ES0021000000000001AA
 
 # Custom input directory
 da summary --input-dir /path/to/input
+
+# Clear generated reports from .output/
+da cleanup
+da cleanup --force
+da clean -f
 ```
 
 ### Running Tests & Quality Checks

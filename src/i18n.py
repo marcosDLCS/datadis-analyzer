@@ -21,6 +21,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "cmd_desc": "Description",
         "cmd_summary_desc": "Traverse annualized directories, aggregate consumption by year and month, and display visual share tables.",
         "cmd_init_desc": "Configure the application language (English or Spanish) and persistent preferences.",
+        "cmd_cleanup_desc": "Remove generated reports and clear files from the .output directory.",
         "cmd_help_desc": "Display this comprehensive command reference, input structure guidelines, and examples.",
         # Options
         "options_title": "OPTIONS FOR 'da summary'",
@@ -111,6 +112,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "init_language_set": "Output language successfully configured to: [bold green]English[/bold green].",
         "init_folders_created": "Workspace directories initialized: [cyan]{input_dir}/[/cyan] and [cyan]{output_dir}/[/cyan].",
         "init_persistence_note": "This preference is persisted in [cyan]{path}[/cyan] and will apply to all subsequent commands.",
+        # da cleanup messages
+        "cleanup_title": "🧹 Output Directory Cleanup",
+        "cleanup_empty": "Output directory [cyan]{dir}[/cyan] is already empty. No files to delete.",
+        "cleanup_confirm": "Delete {count} file(s) from [cyan]{dir}[/cyan]?",
+        "cleanup_aborted": "Cleanup aborted. No files were deleted.",
+        "cleanup_success": "Successfully removed [bold green]{count}[/bold green] file(s) from [cyan]{dir}[/cyan].",
         # Report export
         "report_generated": "Markdown summary report saved to: [cyan]{path}[/cyan]",
         # Markdown specific
@@ -138,6 +145,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "cmd_desc": "Descripción",
         "cmd_summary_desc": "Recorrer directorios anuales, agregar consumo por año y mes, y mostrar tablas visuales de porcentajes.",
         "cmd_init_desc": "Configurar el idioma de salida de la aplicación (inglés o español) y preferencias persistentes.",
+        "cmd_cleanup_desc": "Eliminar los informes generados y limpiar los archivos de la carpeta .output.",
         "cmd_help_desc": "Mostrar esta referencia de comandos, guía de estructura de datos y ejemplos.",
         # Options
         "options_title": "OPCIONES PARA 'da summary'",
@@ -228,6 +236,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "init_language_set": "Idioma de salida configurado correctamente a: [bold green]Español[/bold green].",
         "init_folders_created": "Carpetas de trabajo inicializadas: [cyan]{input_dir}/[/cyan] y [cyan]{output_dir}/[/cyan].",
         "init_persistence_note": "Esta preferencia se guarda en [cyan]{path}[/cyan] y se aplicará a los comandos siguientes.",
+        # da cleanup messages
+        "cleanup_title": "🧹 Limpieza de Carpeta de Salida",
+        "cleanup_empty": "La carpeta de salida [cyan]{dir}[/cyan] ya está vacía. No hay archivos para eliminar.",
+        "cleanup_confirm": "¿Eliminar {count} archivo(s) de [cyan]{dir}[/cyan]?",
+        "cleanup_aborted": "Limpieza cancelada. No se eliminó ningún archivo.",
+        "cleanup_success": "Se han eliminado [bold green]{count}[/bold green] archivo(s) correctamente de [cyan]{dir}[/cyan].",
         # Report export
         "report_generated": "Informe de resumen en Markdown guardado en: [cyan]{path}[/cyan]",
         # Markdown specific

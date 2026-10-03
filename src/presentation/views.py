@@ -55,6 +55,10 @@ def render_help(lang: str | None = None) -> None:
         t("cmd_init_desc", lang=lang),
     )
     cmd_table.add_row(
+        "da cleanup",
+        t("cmd_cleanup_desc", lang=lang),
+    )
+    cmd_table.add_row(
         "da help",
         t("cmd_help_desc", lang=lang),
     )
@@ -531,6 +535,43 @@ def render_export_success(report_path: Path, lang: str | None = None) -> None:
             msg,
             border_style="green",
             box=box.ROUNDED,
+        )
+    )
+    console.print()
+
+
+def render_cleanup_result(
+    removed_files: list[Path],
+    output_dir: Path,
+    lang: str | None = None,
+) -> None:
+    """Render notification panel after executing da cleanup."""
+    if not removed_files:
+        console.print()
+        console.print(
+            Panel(
+                f"[bold yellow](i)[/bold yellow] {t('cleanup_empty', lang=lang, dir=str(output_dir))}",
+                title=f"[bold yellow]{t('cleanup_title', lang=lang)}[/bold yellow]",
+                border_style="yellow",
+                box=box.ROUNDED,
+            )
+        )
+        console.print()
+        return
+
+    file_list = "\n".join(f"  • [dim]{f.name}[/dim]" for f in removed_files[:10])
+    if len(removed_files) > 10:
+        file_list += f"\n  [dim]... and {len(removed_files) - 10} more[/dim]"
+
+    msg = f"✔ {t('cleanup_success', lang=lang, count=len(removed_files), dir=str(output_dir))}\n\n{file_list}"
+    console.print()
+    console.print(
+        Panel(
+            msg,
+            title=f"[bold green]{t('cleanup_title', lang=lang)}[/bold green]",
+            border_style="green",
+            box=box.ROUNDED,
+            padding=(1, 2),
         )
     )
     console.print()
