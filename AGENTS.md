@@ -43,6 +43,7 @@ graph TD
 datadis-analyzer/
 ├── pyproject.toml              # Build config, CLI entry point (da = "src.cli:main"), Ruff config
 ├── requirements.txt            # Core and test dependency manifest
+├── LICENSE                     # Standard MIT open-source license
 ├── README.md                   # User guide and visual overview
 ├── AGENTS.md                   # Agent and developer directives
 ├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits specification
@@ -189,3 +190,4 @@ pre-commit run --all-files
 
 - 📖 [README.md](README.md) — User setup, command reference, and visual overview.
 - 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — Open-source contribution guidelines, coding standards, and PR workflows.
+- 📄 [LICENSE](LICENSE) — Full MIT open-source license text.

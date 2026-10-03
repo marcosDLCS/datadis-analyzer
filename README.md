@@ -87,6 +87,7 @@ Legend: ★ Dominant Consumer (>30% of total)  |  (0) Inactive supply (<1 kWh)
 datadis-analyzer/
 ├── pyproject.toml              # Build metadata, dependencies, and CLI script entrypoint (`da`)
 ├── requirements.txt            # Core, dev, and test dependency manifest
+├── LICENSE                     # Standard MIT open-source license
 ├── README.md                   # User documentation and visual guide
 ├── AGENTS.md                   # Technical reference and AI agent guidelines
 ├── CONTRIBUTING.md             # Contribution workflow & Conventional Commits specification
@@ -272,4 +273,10 @@ Contributions are warmly welcome! Please check out:
 
 ## 📄 License
 
-This project is licensed under the terms of the [MIT License](LICENSE).
+This project is open-source software licensed under the terms of the [MIT License](LICENSE).
+
+```text
+MIT License — Copyright (c) 2026 Marcos de la Calle
+```
+
+You are free to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, provided the copyright notice and permission notice are preserved. See the full text in [LICENSE](LICENSE).

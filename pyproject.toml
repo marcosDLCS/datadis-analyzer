@@ -8,8 +8,22 @@ version = "0.1.0"
 description = "Modular CLI tool to analyze Spanish DATADIS energy consumption data for residential communities"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
 authors = [
-    { name = "Marcos" }
+    { name = "Marcos de la Calle" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Utilities",
 ]
 dependencies = [
     "pandas>=2.0.0",

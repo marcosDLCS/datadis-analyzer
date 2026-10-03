@@ -226,6 +226,7 @@ pytest tests/test_aggregator.py -v
    - [ ] No real CUPS identifiers or sensitive data are included.
    - [ ] Translations updated in `src/i18n.py` (both `en` and `es`) if UI text changed.
    - [ ] Documentation (`README.md`, `AGENTS.md`) updated where appropriate.
+   - [ ] Contributions are submitted under the terms of the [MIT License](LICENSE).
 
 ---
 
@@ -233,3 +234,4 @@ pytest tests/test_aggregator.py -v
 
 - 📖 [README.md](README.md) — Comprehensive user setup, command options, and architecture overview.
 - 🤖 [AGENTS.md](AGENTS.md) — Detailed specifications, technical guidelines, and domain invariants for AI coding assistants.
+- 📄 [LICENSE](LICENSE) — Standard MIT open-source license terms.
