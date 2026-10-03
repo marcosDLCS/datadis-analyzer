@@ -1,47 +1,68 @@
-# Contributing to DATADIS Analyzer
+# 🤝 Contributing to DATADIS Analyzer
 
-Thank you for your interest in contributing to **DATADIS Analyzer** (`da`)! This project is an open-source CLI tool and library designed to analyze hourly electrical energy consumption data exported from Spain's [DATADIS](https://datadis.es) platform for residential building communities (*comunidades de vecinos*).
+> *"Leave the code better than you found it, format with Ruff, and never, ever leak a neighbor's real CUPS."*
 
-We welcome contributions of all kinds: bug reports, documentation enhancements, feature proposals, and pull requests.
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat&logo=git)](https://conventionalcommits.org)
+[![Code Style: Ruff](https://img.shields.io/badge/Code%20Style-Ruff-000000.svg?style=flat&logo=ruff&logoColor=white)](https://astral.sh/ruff)
+[![Pre-commit](https://img.shields.io/badge/Pre--commit-Enabled-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://pre-commit.com/)
+[![Tests: Pytest](https://img.shields.io/badge/Tests-Pytest-0A9EDC.svg?style=flat&logo=pytest&logoColor=white)](https://docs.pytest.org/)
 
-To maintain code quality, security, and a clean repository history, all contributors are expected to follow the guidelines outlined below.
+Thank you for your interest in contributing to **DATADIS Analyzer** (`da`)! This project is an open-source CLI utility and analytical engine designed to bring transparency and mathematical harmony to residential building energy distribution in Spain.
 
----
-
-## Table of Contents
-1. [Guiding Principles & Anonymization Policy](#1-guiding-principles--anonymization-policy)
-2. [Development Environment Setup](#2-development-environment-setup)
-3. [Conventional Commits Specification](#3-conventional-commits-specification)
-4. [Coding Standards & Conventions](#4-coding-standards--conventions)
-5. [Testing Guidelines](#5-testing-guidelines)
-6. [Pull Request Workflow](#6-pull-request-workflow)
-7. [Related Documentation](#7-related-documentation)
+We welcome all contributors: from first-time issue filers to seasoned Python data engineers.
 
 ---
 
-## 1. Guiding Principles & Anonymization Policy
+## 🗺️ Contribution Lifecycle
 
-### ⚠️ Strict Privacy & Data Anonymization Rule
-DATADIS CSV exports contain sensitive information:
-- Real CUPS identifiers (*Código Unificado de Punto de Suministro*), which identify physical properties.
-- Hourly consumption figures that can reveal private household routines.
-- Contract numbers and distributor identifiers.
+```mermaid
+flowchart TD
+    A["💡 Issue / Feature Idea"] --> B["🍴 Create Branch\n(feat/... or fix/...)"]
+    B --> C["💻 Code Implementation\n(PEP 8, strict typing)"]
+    C --> D["🧪 Automated Tests\n(pytest -v, 100% pass)"]
+    D --> E["🧹 Pre-Commit Verification\n(Ruff lint & format)"]
+    E --> F["📝 Conventional Commit\n(<type>(<scope>): <desc>)"]
+    F --> G["🚀 Open Pull Request"]
+```
+
+---
+
+## 📋 Table of Contents
+1. [🛡️ Privacy First: Anonymization Policy](#1-privacy-first-anonymization-policy)
+2. [🛠️ Development Environment Setup](#2-development-environment-setup)
+3. [📝 Conventional Commits Specification](#3-conventional-commits-specification)
+4. [🎯 Coding Standards & Tooling](#4-coding-standards--tooling)
+5. [🧪 Testing Guidelines](#5-testing-guidelines)
+6. [🚀 Pull Request Workflow & Checklist](#6-pull-request-workflow--checklist)
+7. [📚 Related Documentation](#7-related-documentation)
+
+---
+
+## 1. 🛡️ Privacy First: Anonymization Policy
+
+### ⚠️ The Golden Rule: Zero Real Data in Git
+DATADIS exports from electricity distributors contain sensitive private data:
+- **CUPS identifiers** pinpoint specific physical residences.
+- **Hourly consumption timelines** reveal when families sleep, cook, or leave on vacation.
+- **Contract references** are legally protected personal identifiers.
 
 > [!CAUTION]
-> **NEVER commit real CUPS numbers, contract numbers, or real residential datasets into this repository.**
+> **NEVER commit real CUPS numbers, contract IDs, or real household datasets into this repository.**
 
-- All test fixtures in `tests/conftest.py` and mock CSV files must use **anonymized dummy CUPS** following Spain's format (e.g., `ES0021000000000001AA`, `ES0021000000000002BB`).
-- Any issue, pull request description, or test case leaking real supply point identifiers will be scrubbed immediately.
+- All test fixtures in `tests/conftest.py` and mock CSV files must use **dummy test CUPS** matching Spain's format:
+  - `ES0021000000000001AA`
+  - `ES0021000000000002BB`
+- Any commit, issue, or pull request containing real supply point data will be purged immediately.
 
 ---
 
-## 2. Development Environment Setup
+## 2. 🛠️ Development Environment Setup
 
 ### Prerequisites
-- **Python:** Version 3.11 or higher (Python 3.12+ recommended).
-- **Git:** Version 2.30+.
+- **Python:** 3.11+ (Python 3.12 or 3.14 supported).
+- **Git:** 2.30+.
 
-### Local Setup Steps
+### Step-by-Step Local Setup
 
 1. **Clone the repository:**
    ```bash
@@ -55,19 +76,20 @@ DATADIS CSV exports contain sensitive information:
    source .venv/bin/activate
    ```
 
-3. **Install the package in editable mode with development dependencies:**
+3. **Install dependencies and CLI in editable mode:**
    ```bash
    pip install --upgrade pip
    pip install -e ".[dev]"
    ```
 
-4. **Install git pre-commit hooks:**
+4. **Install Git Pre-commit Hooks (Mandatory):**
    ```bash
    pre-commit install
    ```
-   This automatically runs Ruff linting, formatting, and file sanity checks before every `git commit`.
+   > [!TIP]
+   > This single command hooks into git so that every `git commit` automatically triggers **Ruff** linting and formatting. You will never commit broken code or misaligned indents!
 
-5. **Verify the installation:**
+5. **Verify the environment:**
    ```bash
    da --help
    pytest
@@ -79,152 +101,135 @@ DATADIS CSV exports contain sensitive information:
    ```bash
    da init
    ```
-   This command creates `./.input` and `./.output` directories and persists your output language preference in `.da_config.json`.
 
 ---
 
-## 3. Conventional Commits Specification
+## 3. 📝 Conventional Commits Specification
 
-This project strictly adheres to the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification. Every commit message must follow this structure:
+We adhere strictly to the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification. This ensures automated changelog generation, clean git graphs, and clear project intent.
 
 ```text
 <type>(<optional scope>): <description>
 
-[optional body]
+[optional body explaining 'why' and 'what']
 
 [optional footer(s)]
 ```
 
-### Commit Types
-| Type | Description | Example |
+### Commit Types Cheat Sheet
+| Type | Purpose | Example |
 | :--- | :--- | :--- |
-| `feat` | A new user-facing feature | `feat(cli): add CSV delimiter override option` |
-| `fix` | A bug fix | `fix(validator): handle empty lines at end of CSV` |
-| `docs` | Documentation only changes | `docs: add contributing guide and link to readme` |
-| `style` | Formatting, missing whitespace, no production code change | `style(views): adjust table border padding` |
-| `refactor` | Code restructuring without altering external behavior | `refactor(aggregator): optimize monthly pivot calculation` |
-| `perf` | Code changes improving execution speed or memory usage | `perf(loader): use vectorized datetime parsing` |
-| `test` | Adding or updating automated tests | `test(cli): add tests for custom input directory` |
-| `build` | Build system, packaging, or dependency updates | `build: bump rich dependency to 13.9.0` |
-| `ci` | Continuous integration configuration changes | `ci: add GitHub Actions workflow for pytest` |
-| `chore` | Maintenance tasks, repository housekeeping | `chore: update .gitignore for editor artifacts` |
+| `feat` | A new user-facing capability | `feat(cli): add quarterly summary flag` |
+| `fix` | A bug fix | `fix(validator): handle empty trailing newline` |
+| `docs` | Documentation additions or updates | `docs: add contributing visual guide` |
+| `style` | Formatting, whitespace, no functional change | `style(views): adjust header padding` |
+| `refactor` | Code restructuring with identical behavior | `refactor(aggregator): optimize monthly pivot logic` |
+| `perf` | Measurable performance optimization | `perf(loader): vectorize date parsing` |
+| `test` | Adding or improving tests | `test(aggregator): add test for zero-consumption CUPS` |
+| `build` | Packaging, build system, pyproject.toml | `build: upgrade ruff to 0.9.10` |
+| `ci` | Continuous integration workflows | `ci: add GitHub Actions matrix test` |
+| `chore` | Housekeeping, gitignore updates | `chore: update editor ignore patterns` |
 
-### Allowed Scopes
-Common scopes include:
-- `cli` — Typer CLI commands, options, and callbacks (`src/cli.py`)
+### Recognized Scopes
+- `cli` — Typer commands, options, prompts (`src/cli.py`)
 - `core` — Core application infrastructure
-- `config` — Settings persistence, path resolution (`src/config.py`)
-- `i18n` — Multi-language translations and localization engine (`src/i18n.py`)
-- `loader` — CSV file discovery and DataFrame ingestion (`src/ingestion/loader.py`)
-- `validator` — Delimiter, encoding, and schema validation (`src/ingestion/validator.py`)
-- `aggregator` — Grouping logic, period shares, and pivots (`src/processing/aggregator.py`)
-- `views` — Terminal tables, metric panels, and formatting (`src/presentation/views.py`)
-- `export` — Markdown report generation (`src/presentation/export.py`)
-
-### Formatting Rules
-- **Description:** Written in the imperative mood, present tense ("add", not "added" or "adds").
-- **Case:** Start with a lowercase letter.
-- **Punctuation:** Do not end the description with a period (`.`).
-- **Body:** Use the body to explain the *what* and *why* behind the change, not just restate the commit title.
+- `config` — Settings, defaults, path resolution (`src/config.py`)
+- `i18n` — Localization and translations (`src/i18n.py`)
+- `loader` — CSV file discovery and loading (`src/ingestion/loader.py`)
+- `validator` — Delimiter/encoding/schema validator (`src/ingestion/validator.py`)
+- `aggregator` — Grouping math and share calculations (`src/processing/aggregator.py`)
+- `views` — Rich tables, progress bars, panels (`src/presentation/views.py`)
+- `export` — Markdown file generation (`src/presentation/export.py`)
+- `tooling` — Ruff, pre-commit, formatting configurations
 
 ---
 
-## 4. Coding Standards & Conventions
+## 4. 🎯 Coding Standards & Tooling
 
-### Language & Documentation
-- **Code Language:** Write all code, class/function names, variables, comments, docstrings, and commit messages entirely in **English**.
-- **User Interface (i18n):** Any string presented to the user via the CLI or markdown export must be registered in [src/i18n.py](src/i18n.py) in both English (`en`) and Spanish (`es`).
+### Language & Internationalization
+- **English Everywhere:** Write all code, class names, functions, docstrings, variable names, and comments in **English**.
+- **User Interface (i18n):** Any string shown in the CLI or printed in Markdown reports must use the translation helper `t("key", lang=...)` with entries in [src/i18n.py](src/i18n.py) for both English (`en`) and Spanish (`es`).
 
-### Type Annotations
-- Use strict, explicit type hinting from the standard `typing` module on **all** function signatures, dataclasses, and class methods.
-- Avoid untyped `Any` whenever a concrete type or `Union` can be defined.
+### Python Typing
+- Strict type hinting is required on **all** public and private functions.
+- Use native modern union syntax: `int | None` instead of `Optional[int]`.
+- Avoid untyped `Any` whenever a dataclass or structured type can be defined.
 
-### Code Style
-- Follow [PEP 8](https://peps.python.org/pep-0008/) style guidelines.
-- Keep line lengths reasonable (maximum 100–120 characters).
-- Maintain modular architecture: keep data ingestion (`src/ingestion/`), domain processing (`src/processing/`), and visual presentation (`src/presentation/`) strictly separated.
+### 🧹 Linting & Formatting (Ruff: Python's Prettier)
+We let robots handle formatting so humans can focus on architecture:
+- **Linter:** `ruff check .` (auto-fix with `ruff check --fix .`).
+- **Formatter:** `ruff format .` (verify with `ruff format --check .`).
+- **Hook check:** Test all hooks across files with `pre-commit run --all-files`.
 
-### Linting & Formatting (Ruff & Pre-Commit)
-We enforce clean, consistent code style using [Ruff](https://astral.sh/ruff), the high-performance Python linter and code formatter:
-- **Linting:** `ruff check .` (run `ruff check --fix .` to automatically fix common lint issues).
-- **Formatting (Prettier for Python):** `ruff format .` (run `ruff format --check .` to verify formatting in CI).
-- **Pre-commit Automation:** Git pre-commit hooks ensure that all staged Python files pass Ruff linting and formatting before any commit is accepted. Install once via `pre-commit install`.
-- **Manual Hook Verification:** Run all hooks across the codebase with `pre-commit run --all-files`.
-
-### Terminal UI Aesthetics
-- Keep Rich tables responsive and compact.
-- Ensure terminal tables fit comfortably within standard **80-column terminals** without line wraps or broken column alignments (`no_wrap=True` for identifiers, numbers, and percentages).
-
-### Error Handling
-- Use custom domain exceptions defined in `src.ingestion.schema`:
-  - `DatadisError`: Base exception for all domain errors.
-  - `DatadisValidationError`: Raised when file headers, delimiters, or formats fail validation.
-  - `DatadisParseError`: Raised when data cannot be normalized into valid numeric records.
-- CLI commands should catch known domain exceptions and print formatted error panels rather than dumping raw Python stack traces.
+### Terminal Aesthetics (The 80-Column Rule)
+- All Rich tables and panels must render cleanly within standard **80-column terminal windows**.
+- Always use `no_wrap=True` for numerical data, percentage columns, and CUPS IDs to avoid unsightly text wrapping.
 
 ---
 
-## 5. Testing Guidelines
+## 5. 🧪 Testing Guidelines
 
-Automated testing is mandatory for all contributions.
+No code merges without automated test coverage.
 
-### Running Tests
-Execute the test suite using `pytest`:
-
+### Running Pytest
 ```bash
-# Run all tests with verbose output
+# Verbose execution with full test names
 pytest -v
 
-# Run with concise summary
+# Quick summary
 pytest -q
 
-# Run a specific test module
+# Run an individual test file
 pytest tests/test_aggregator.py -v
 ```
 
-### Test Standards
-- Every new feature, validation rule, or calculation must include automated tests in `tests/`.
-- Ensure all tests use isolated temporary fixtures (`tmp_path`, `sample_valid_csv`, `sample_input_hierarchy`) to prevent side effects on the workspace or configuration files.
-- The entire test suite must pass with a 100% pass rate before opening a Pull Request.
+### Invariants Every Test Must Uphold
+1. **The 100.00% Share Invariant:** For any period (annual or monthly), the sum of `share_pct` across all community supply points must equal `100.00%` (within floating point precision).
+2. **Isolation:** Tests must never touch the user's real `.da_config.json` or `.output/` directories. Use the `reset_default_config` fixture and `tmp_path`.
 
 ---
 
-## 6. Pull Request Workflow
+## 6. 🚀 Pull Request Workflow & Checklist
 
-1. **Create a topic branch:**
+1. **Create your feature branch:**
    ```bash
-   git checkout -b feat/your-feature-name
-   # or
-   git checkout -b fix/issue-description
+   git checkout -b feat/your-descriptive-feature-name
    ```
 
-2. **Make your changes:**
-   - Write clean, well-tested code.
-   - Update documentation and docstrings where relevant.
+2. **Develop with confidence:**
+   - Keep changes focused and atomic.
+   - Add unit tests in `tests/` for every new branch or calculation.
 
-3. **Verify tests and style locally:**
+3. **Verify locally before pushing:**
    ```bash
+   # 1. Run automated tests
    pytest -v
+
+   # 2. Run linter and formatter
+   ruff check .
+   ruff format --check .
+
+   # 3. Verify all pre-commit hooks
+   pre-commit run --all-files
    ```
 
-4. **Commit using Conventional Commits:**
+4. **Commit with Conventional Commits:**
    ```bash
-   git commit -m "feat(aggregator): add quarterly aggregation support"
+   git commit -m "feat(views): add quarterly breakdown comparison table"
    ```
 
-5. **Push and open a Pull Request:**
-   - Provide a clear, detailed PR description outlining the motivation and changes.
-   - Confirm that the PR checklist has been satisfied:
-     - [ ] Commits follow the Conventional Commits specification.
-     - [ ] All automated tests pass (`pytest -v`).
-     - [ ] Pre-commit hooks and Ruff checks pass (`pre-commit run --all-files`).
-     - [ ] No real CUPS codes or personal data are included.
-     - [ ] Both English and Spanish translations are updated in `src/i18n.py` (if applicable).
-     - [ ] Documentation (`README.md`, `AGENTS.md`) is updated if CLI options or behaviors changed.
+5. **PR Checklist:**
+   - [ ] Commits strictly follow Conventional Commits (`<type>(<scope>): <desc>`).
+   - [ ] All 35+ automated tests pass (`pytest -v`).
+   - [ ] Code is formatted with Ruff (`ruff format --check .`).
+   - [ ] Pre-commit hooks pass (`pre-commit run --all-files`).
+   - [ ] No real CUPS identifiers or sensitive data are included.
+   - [ ] Translations updated in `src/i18n.py` (both `en` and `es`) if UI text changed.
+   - [ ] Documentation (`README.md`, `AGENTS.md`) updated where appropriate.
 
 ---
 
-## 7. Related Documentation
+## 7. 📚 Related Documentation
 
-- [README.md](README.md) — User guide, installation steps, and CLI usage reference.
-- [AGENTS.md](AGENTS.md) — Technical reference, domain architecture, and AI agent guidelines.
+- 📖 [README.md](README.md) — Comprehensive user setup, command options, and architecture overview.
+- 🤖 [AGENTS.md](AGENTS.md) — Detailed specifications, technical guidelines, and domain invariants for AI coding assistants.
