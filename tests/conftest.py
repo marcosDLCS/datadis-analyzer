@@ -1,3 +1,5 @@
+import shutil
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -5,13 +7,61 @@ import pytest
 from src.config import AppConfig, save_config
 
 
+def pytest_sessionstart(session: pytest.Session) -> None:
+    """Purge any mock test data that may have leaked into production .output before running tests."""
+    real_output_dir = Path(".output")
+    if real_output_dir.exists():
+        for file in real_output_dir.glob("*.md"):
+            try:
+                content = file.read_text(encoding="utf-8")
+                if "ES0021000000000001AA" in content or "ES0021000000000002BB" in content:
+                    file.unlink()
+            except Exception:
+                pass
+
+
+@pytest.fixture(scope="session", autouse=True)
+def guard_production_output_directory() -> Generator[None, None, None]:
+    """Ensure production .output directory is never polluted during test execution."""
+    real_output_dir = Path(".output")
+    initial_files = set(real_output_dir.glob("*")) if real_output_dir.exists() else set()
+
+    yield
+
+    if real_output_dir.exists():
+        current_files = set(real_output_dir.glob("*"))
+        leaked = current_files - initial_files
+        for leak in leaked:
+            if leak.is_file():
+                leak.unlink()
+            elif leak.is_dir():
+                shutil.rmtree(leak)
+        if leaked:
+            raise AssertionError(
+                f"Test suite leaked files into production .output: {[f.name for f in leaked]}"
+            )
+
+
 @pytest.fixture(autouse=True)
 def reset_default_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Isolate configuration file during test execution to prevent cross-test contamination."""
+    """Isolate configuration and output directory during test execution to prevent cross-test contamination."""
     test_config = tmp_path / ".da_test_config.json"
-    save_config(AppConfig(language="en"), test_config)
+    test_output = tmp_path / ".output"
+    test_input = tmp_path / ".input"
+
+    save_config(
+        AppConfig(
+            language="en",
+            input_dir=str(test_input),
+            output_dir=str(test_output),
+        ),
+        test_config,
+    )
     monkeypatch.setattr("src.config.CONFIG_FILE_PATH", test_config)
     monkeypatch.setattr("src.cli.CONFIG_FILE_PATH", test_config)
+    monkeypatch.setattr("src.config.DEFAULT_OUTPUT_DIR", test_output)
+    monkeypatch.setattr("src.presentation.export.DEFAULT_OUTPUT_DIR", test_output)
+    monkeypatch.setattr("src.cli.DEFAULT_OUTPUT_DIR", test_output)
 
 
 @pytest.fixture

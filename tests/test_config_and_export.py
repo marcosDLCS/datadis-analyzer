@@ -188,3 +188,17 @@ def test_cleanup_output_directory_handles_subdirs_and_nonexistent(tmp_path: Path
     removed = cleanup_output_directory(test_dir)
     assert len(removed) == 2
     assert list(test_dir.iterdir()) == []
+
+
+def test_summary_never_pollutes_production_output_directory(
+    sample_input_hierarchy: Path,
+) -> None:
+    """Running 'da summary' without explicit -o must write to isolated test directory, not production .output."""
+    real_output_dir = Path(".output")
+    initial_files = set(real_output_dir.glob("*")) if real_output_dir.exists() else set()
+
+    result = runner.invoke(app, ["summary", "-i", str(sample_input_hierarchy)])
+    assert result.exit_code == 0
+
+    current_files = set(real_output_dir.glob("*")) if real_output_dir.exists() else set()
+    assert current_files == initial_files, "Production .output directory was modified by tests!"

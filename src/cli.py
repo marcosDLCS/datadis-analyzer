@@ -10,6 +10,7 @@ from src.config import (
     DEFAULT_OUTPUT_DIR,
     ensure_directories,
     get_language,
+    load_config,
     normalize_language_code,
     set_language,
 )
@@ -96,8 +97,8 @@ def init_cmd(
 
 @app.command(name="cleanup")
 def cleanup_cmd(
-    output_dir: Path = typer.Option(
-        DEFAULT_OUTPUT_DIR,
+    output_dir: Path | None = typer.Option(
+        None,
         "--output-dir",
         "-o",
         help="Directory containing reports to remove (default: ./.output).",
@@ -120,19 +121,21 @@ def cleanup_cmd(
 ) -> None:
     """Remove generated reports and clear files from the .output directory."""
     effective_lang = lang or get_language()
+    cfg = load_config()
+    target_output_dir = output_dir or Path(cfg.output_dir or DEFAULT_OUTPUT_DIR)
 
-    if not output_dir.exists() or not any(output_dir.iterdir()):
-        render_cleanup_result([], output_dir=output_dir, lang=effective_lang)
+    if not target_output_dir.exists() or not any(target_output_dir.iterdir()):
+        render_cleanup_result([], output_dir=target_output_dir, lang=effective_lang)
         return
 
-    existing_items = list(output_dir.iterdir())
+    existing_items = list(target_output_dir.iterdir())
     if not force:
         confirmed = typer.confirm(
             t(
                 "cleanup_confirm",
                 lang=effective_lang,
                 count=len(existing_items),
-                dir=str(output_dir),
+                dir=str(target_output_dir),
             ),
             default=False,
         )
@@ -140,14 +143,14 @@ def cleanup_cmd(
             console.print(f"\n[yellow]{t('cleanup_aborted', lang=effective_lang)}[/yellow]\n")
             raise typer.Exit(code=0)
 
-    removed = cleanup_output_directory(output_dir)
-    render_cleanup_result(removed, output_dir=output_dir, lang=effective_lang)
+    removed = cleanup_output_directory(target_output_dir)
+    render_cleanup_result(removed, output_dir=target_output_dir, lang=effective_lang)
 
 
 @app.command(name="clean", hidden=True)
 def clean_alias(
-    output_dir: Path = typer.Option(
-        DEFAULT_OUTPUT_DIR,
+    output_dir: Path | None = typer.Option(
+        None,
         "--output-dir",
         "-o",
         help="Directory containing reports to remove (default: ./.output).",
@@ -181,8 +184,8 @@ def summary_cmd(
         dir_okay=True,
         readable=True,
     ),
-    output_dir: Path = typer.Option(
-        DEFAULT_OUTPUT_DIR,
+    output_dir: Path | None = typer.Option(
+        None,
         "--output-dir",
         "-o",
         help="Directory where markdown reports will be stored (default: ./.output).",
@@ -222,6 +225,9 @@ def summary_cmd(
         effective_lang = normalize_language_code(effective_lang)
     except ValueError:
         effective_lang = "en"
+
+    cfg = load_config()
+    target_output_dir = output_dir or Path(cfg.output_dir or DEFAULT_OUTPUT_DIR)
 
     normalized_view = view.lower().strip()
     if normalized_view not in ("all", "annual", "monthly"):
@@ -317,7 +323,7 @@ def summary_cmd(
     # 8. Export markdown summary report into .output/
     report_file = export_markdown_summary(
         summary=summary,
-        output_dir=output_dir,
+        output_dir=target_output_dir,
         lang=effective_lang,
         year_filter=year,
         cups_filter=cups,

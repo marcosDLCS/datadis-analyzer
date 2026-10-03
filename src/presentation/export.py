@@ -20,7 +20,7 @@ def _make_ascii_bar(pct: float, width: int = 12) -> str:
 
 def export_markdown_summary(
     summary: CommunitySummary,
-    output_dir: Path = DEFAULT_OUTPUT_DIR,
+    output_dir: Path | None = None,
     lang: str | None = None,
     year_filter: int | None = None,
     cups_filter: str | None = None,
@@ -32,7 +32,7 @@ def export_markdown_summary(
 
     Args:
         summary: Aggregated CommunitySummary dataset.
-        output_dir: Directory where the report will be saved (default: .output).
+        output_dir: Directory where the report will be saved (default: loaded config or .output).
         lang: Target language ('en' or 'es').
         year_filter: Optional year filter applied.
         cups_filter: Optional CUPS filter applied.
@@ -41,7 +41,10 @@ def export_markdown_summary(
     Returns:
         Path to the saved markdown file.
     """
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from src.config import load_config
+
+    target_output_dir = output_dir or Path(load_config().output_dir or DEFAULT_OUTPUT_DIR)
+    target_output_dir.mkdir(parents=True, exist_ok=True)
     now = datetime.now()
     timestamp_prefix = now.strftime("%Y%m%d_%H%M%S")
 
@@ -53,7 +56,7 @@ def export_markdown_summary(
     else:
         filename = f"{timestamp_prefix}_community_summary.md"
 
-    report_path = output_dir / filename
+    report_path = target_output_dir / filename
 
     lines: list[str] = []
 
@@ -225,20 +228,23 @@ def export_markdown_summary(
     return report_path
 
 
-def cleanup_output_directory(output_dir: Path = DEFAULT_OUTPUT_DIR) -> list[Path]:
+def cleanup_output_directory(output_dir: Path | None = None) -> list[Path]:
     """Remove all files and subdirectories from the specified output directory.
 
     Args:
-        output_dir: Directory to clear (default: ./.output).
+        output_dir: Directory to clear (default: loaded config or ./.output).
 
     Returns:
         Sorted list of Path objects for all deleted items.
     """
-    if not output_dir.exists() or not output_dir.is_dir():
+    from src.config import load_config
+
+    target_output_dir = output_dir or Path(load_config().output_dir or DEFAULT_OUTPUT_DIR)
+    if not target_output_dir.exists() or not target_output_dir.is_dir():
         return []
 
     removed: list[Path] = []
-    for item in sorted(output_dir.iterdir()):
+    for item in sorted(target_output_dir.iterdir()):
         if item.is_file():
             item.unlink()
             removed.append(item)
