@@ -8,10 +8,13 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from src.i18n import t
+from src.i18n import get_month_name, t
 from src.ingestion.schema import ValidationResult
 from src.presentation.console import console, format_kwh, format_pct, make_share_bar
-from src.processing.models import CommunitySummary
+from src.processing.models import (
+    CommunitySummary,
+    ComparisonSummary,
+)
 
 
 def render_help(lang: str | None = None) -> None:
@@ -49,6 +52,10 @@ def render_help(lang: str | None = None) -> None:
     cmd_table.add_row(
         "da summary",
         t("cmd_summary_desc", lang=lang),
+    )
+    cmd_table.add_row(
+        "da compare",
+        t("cmd_compare_desc", lang=lang),
     )
     cmd_table.add_row(
         "da init",
@@ -574,4 +581,223 @@ def render_cleanup_result(
             padding=(1, 2),
         )
     )
+    console.print()
+
+
+def render_comparison_overview(comparison: ComparisonSummary, lang: str | None = None) -> None:
+    """Render executive overview panel comparing multiple calendar years."""
+    years_str = " ➔ ".join(map(str, comparison.years))
+
+    lines: list[str] = []
+    lines.append(
+        f"[bold white]{t('compare_years_label', lang=lang)}[/bold white] [bold cyan]{years_str}[/bold cyan]"
+    )
+
+    # Annual totals
+    for y in comparison.years:
+        kwh = comparison.annual_totals[y]
+        lines.append(f"  • [bold]{y}:[/bold] [yellow]{format_kwh(kwh)}[/yellow]")
+
+    lines.append("")
+    # Overall change
+    diff = comparison.total_diff_kwh
+    pct = comparison.total_pct_change
+    if pct is not None:
+        if diff < 0:
+            status_text = t(
+                "compare_status_saving",
+                lang=lang,
+                diff_kwh=format_kwh(abs(diff)),
+                pct=f"{abs(pct):.2f}",
+            )
+        elif diff > 0:
+            status_text = t(
+                "compare_status_increase",
+                lang=lang,
+                diff_kwh=format_kwh(diff),
+                pct=f"{pct:.2f}",
+            )
+        else:
+            status_text = t("compare_status_stable", lang=lang, diff_kwh=format_kwh(diff))
+        lines.append(f"[bold]{t('compare_overall_change', lang=lang)}[/bold] {status_text}")
+
+    # Highlights
+    highlights: list[str] = []
+    if comparison.max_decrease_month:
+        m_name = get_month_name(comparison.max_decrease_month.month, lang=lang)
+        pct_val = abs(comparison.max_decrease_month.pct_change or 0.0)
+        highlights.append(
+            f"[green]▼[/green] {t('compare_max_decrease', lang=lang)} [bold]{m_name}[/bold] "
+            f"([green]-{pct_val:.1f}%[/green] / [green]-{format_kwh(abs(comparison.max_decrease_month.diff_kwh))}[/green])"
+        )
+
+    if comparison.max_increase_month:
+        m_name = get_month_name(comparison.max_increase_month.month, lang=lang)
+        pct_val = comparison.max_increase_month.pct_change or 0.0
+        highlights.append(
+            f"[red]▲[/red] {t('compare_max_increase', lang=lang)} [bold]{m_name}[/bold] "
+            f"([red]+{pct_val:.1f}%[/red] / [red]+{format_kwh(comparison.max_increase_month.diff_kwh)}[/red])"
+        )
+
+    if comparison.top_saving_cups:
+        highlights.append(
+            f"[green]🏆[/green] {t('compare_top_saver', lang=lang)} [cyan]{comparison.top_saving_cups.cups}[/cyan] "
+            f"([green]-{format_kwh(abs(comparison.top_saving_cups.diff_kwh))}[/green])"
+        )
+
+    if comparison.top_increasing_cups:
+        highlights.append(
+            f"[yellow]⚡[/yellow] {t('compare_top_increaser', lang=lang)} [cyan]{comparison.top_increasing_cups.cups}[/cyan] "
+            f"([red]+{format_kwh(comparison.top_increasing_cups.diff_kwh)}[/red])"
+        )
+
+    if highlights:
+        lines.append("")
+        lines.extend(f"  {h}" for h in highlights)
+
+    console.print()
+    console.print(
+        Panel(
+            "\n".join(lines),
+            title=f"[bold cyan]{t('compare_overview_title', lang=lang)}[/bold cyan]",
+            border_style="cyan",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        )
+    )
+    console.print()
+
+
+def render_monthly_comparison_table(comparison: ComparisonSummary, lang: str | None = None) -> None:
+    """Render month-by-month comparative consumption and variation table."""
+    table = Table(
+        title=f"[bold yellow]{t('compare_monthly_title', lang=lang)}[/bold yellow]",
+        box=box.ROUNDED,
+        header_style="bold cyan",
+        show_lines=False,
+    )
+    table.add_column(t("compare_month_col", lang=lang), style="bold white", no_wrap=True, width=6)
+    for y in comparison.years:
+        table.add_column(f"{y}", justify="right", style="cyan", no_wrap=True, width=13)
+    table.add_column(t("compare_diff_col", lang=lang), justify="right", no_wrap=True, width=13)
+    table.add_column(t("compare_var_col", lang=lang), justify="right", no_wrap=True, width=11)
+    table.add_column(t("compare_trend_col", lang=lang), justify="center", no_wrap=True, width=11)
+
+    for m in comparison.monthly_comparisons:
+        m_label = get_month_name(m.month, lang=lang, short=True)
+        year_cells = [format_kwh(m.yearly_kwh.get(y, 0.0)) for y in comparison.years]
+
+        # Diff cell
+        if m.diff_kwh < 0:
+            diff_cell = f"[green]-{format_kwh(abs(m.diff_kwh))}[/green]"
+        elif m.diff_kwh > 0:
+            diff_cell = f"[red]+{format_kwh(m.diff_kwh)}[/red]"
+        else:
+            diff_cell = "[dim]0.00 kWh[/dim]"
+
+        # Variation & Trend
+        if m.pct_change is not None:
+            if m.pct_change < 0:
+                var_cell = f"[bold green]▼ {m.pct_change:.1f}%[/bold green]"
+                trend_cell = f"[green]{t('compare_trend_reduced', lang=lang)}[/green]"
+            elif m.pct_change > 0:
+                var_cell = f"[bold red]▲ +{m.pct_change:.1f}%[/bold red]"
+                trend_cell = f"[red]{t('compare_trend_increased', lang=lang)}[/red]"
+            else:
+                var_cell = "[dim]— 0.0%[/dim]"
+                trend_cell = f"[dim]{t('compare_trend_equal', lang=lang)}[/dim]"
+        else:
+            var_cell = "[dim]N/A[/dim]"
+            trend_cell = "[dim]—[/dim]"
+
+        table.add_row(m_label, *year_cells, diff_cell, var_cell, trend_cell)
+
+    # Total Row
+    table.add_section()
+    total_year_cells = [format_kwh(comparison.annual_totals[y]) for y in comparison.years]
+    if comparison.total_diff_kwh < 0:
+        total_diff_cell = f"[bold green]-{format_kwh(abs(comparison.total_diff_kwh))}[/bold green]"
+    elif comparison.total_diff_kwh > 0:
+        total_diff_cell = f"[bold red]+{format_kwh(comparison.total_diff_kwh)}[/bold red]"
+    else:
+        total_diff_cell = "[bold]0.00 kWh[/bold]"
+
+    if comparison.total_pct_change is not None:
+        if comparison.total_pct_change < 0:
+            total_var_cell = f"[bold green]▼ {comparison.total_pct_change:.1f}%[/bold green]"
+            total_trend_cell = f"[bold green]{t('compare_trend_reduced', lang=lang)}[/bold green]"
+        elif comparison.total_pct_change > 0:
+            total_var_cell = f"[bold red]▲ +{comparison.total_pct_change:.1f}%[/bold red]"
+            total_trend_cell = f"[bold red]{t('compare_trend_increased', lang=lang)}[/bold red]"
+        else:
+            total_var_cell = "[bold dim]— 0.0%[/bold dim]"
+            total_trend_cell = f"[bold dim]{t('compare_trend_equal', lang=lang)}[/bold dim]"
+    else:
+        total_var_cell = "[dim]N/A[/dim]"
+        total_trend_cell = "[dim]—[/dim]"
+
+    table.add_row(
+        "[bold]Total[/bold]",
+        *total_year_cells,
+        total_diff_cell,
+        total_var_cell,
+        total_trend_cell,
+    )
+
+    console.print(table)
+    console.print()
+
+
+def render_cups_comparison_table(comparison: ComparisonSummary, lang: str | None = None) -> None:
+    """Render comparison table showing individual CUPS shifts between earliest and latest years."""
+    if not comparison.cups_comparisons:
+        return
+
+    earliest_y = comparison.years[0]
+    latest_y = comparison.years[-1]
+
+    table = Table(
+        title=f"[bold yellow]{t('compare_cups_title', lang=lang)} ({earliest_y} ➔ {latest_y})[/bold yellow]",
+        box=box.ROUNDED,
+        header_style="bold cyan",
+        show_lines=False,
+    )
+    table.add_column("Rank", justify="right", style="dim", width=4)
+    table.add_column(t("compare_cups_col", lang=lang), style="bold white", no_wrap=True, width=22)
+    table.add_column(f"{earliest_y}", justify="right", style="cyan", no_wrap=True, width=12)
+    table.add_column(f"{latest_y}", justify="right", style="cyan", no_wrap=True, width=12)
+    table.add_column(t("compare_diff_col", lang=lang), justify="right", no_wrap=True, width=12)
+    table.add_column(t("compare_var_col", lang=lang), justify="right", no_wrap=True, width=11)
+
+    for idx, c in enumerate(comparison.cups_comparisons, start=1):
+        c_kwh_base = c.yearly_kwh.get(earliest_y, 0.0)
+        c_kwh_target = c.yearly_kwh.get(latest_y, 0.0)
+
+        if c.diff_kwh < 0:
+            diff_cell = f"[green]-{format_kwh(abs(c.diff_kwh))}[/green]"
+        elif c.diff_kwh > 0:
+            diff_cell = f"[red]+{format_kwh(c.diff_kwh)}[/red]"
+        else:
+            diff_cell = "[dim]0.00 kWh[/dim]"
+
+        if c.pct_change is not None:
+            if c.pct_change < 0:
+                var_cell = f"[bold green]▼ {c.pct_change:.1f}%[/bold green]"
+            elif c.pct_change > 0:
+                var_cell = f"[bold red]▲ +{c.pct_change:.1f}%[/bold red]"
+            else:
+                var_cell = "[dim]— 0.0%[/dim]"
+        else:
+            var_cell = "[dim]N/A[/dim]"
+
+        table.add_row(
+            str(idx),
+            c.cups,
+            format_kwh(c_kwh_base),
+            format_kwh(c_kwh_target),
+            diff_cell,
+            var_cell,
+        )
+
+    console.print(table)
     console.print()

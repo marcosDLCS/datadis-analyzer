@@ -165,6 +165,14 @@ da summary --cups ES0021000000000001AA # Dedicated CUPS trajectory
 da summary --input-dir /path/to/input   # Custom input directory
 ```
 
+### 🔄 Multi-Year Comparison (`da compare`)
+```bash
+da compare              # Compare all years found in ./.input/ + markdown export
+da compare -y 2024 -y 2025  # Compare specific years
+da compare --years 2024,2025 # Comma-separated year selection
+da compare --lang es    # Render comparison in Spanish
+```
+
 ### 🧹 Output Cleanup (`da cleanup` / `da clean`)
 ```bash
 da cleanup              # Interactive cleanup (prompts before deletion)
@@ -178,7 +186,7 @@ da cleanup --output-dir /path/to/output -f # Clean custom output directory
 ## 🧪 Quality Assurance & Tooling
 
 ```bash
-# Run test suite (41 automated tests)
+# Run test suite (56 automated tests)
 pytest -v
 
 # Run Ruff linter and code formatter
@@ -208,7 +216,7 @@ This project was developed using a **vibe coding** workflow, pairing natural lan
 - **🛠️ Agentic IDE:** Google Antigravity IDE (Advanced Agentic Coding environment by Google DeepMind).
 - **🧠 Models:** Google Gemini (Gemini Flash 3.8 in High reasoning).
 - **🛡️ Governance & Quality Assurance:**
-  - Automated validation with 41 unit, integration, and CLI tests via **Pytest**.
+  - Automated validation with several unit, integration, and CLI tests via **Pytest**.
   - Strict pre-commit enforcement with **Ruff** for linting and code formatting.
   - Domain invariant guarantees (100.00% fair-share mathematical sum).
   - Absolute anonymization protocols for residential energy data.

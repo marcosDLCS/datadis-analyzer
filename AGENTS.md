@@ -85,6 +85,7 @@ da init [-l en|es]        # Initialize directories (.input, .output) & set langu
 da summary [--year YYYY]  # Community summary (annual/monthly overview + export)
 da summary --view monthly # Full month-by-month CUPS breakdown
 da summary --cups <CUPS>  # Inspect specific CUPS trajectory
+da compare [-y YYYY ...]  # Multi-year consumption comparison, trends & export
 da cleanup [-f]           # Clear generated reports from .output/
 da help                   # Interactive manual
 ```

@@ -128,6 +128,36 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "md_section_timeline": "## 3. Monthly Community Timeline & Peak Contributors",
         "md_section_monthly": "## 4. Detailed Monthly CUPS Breakdown",
         "md_section_insights": "## 5. Key Community Observations",
+        # Compare command
+        "cmd_compare_desc": "Compare electrical energy consumption and variation percentage across multiple years.",
+        "opt_compare_years": "Years to compare (e.g. -y 2024 -y 2025 or --years 2024,2025). Defaults to all available years.",
+        "compare_overview_title": "⚡ Multi-Year Community Energy Comparison",
+        "compare_years_label": "Years Compared:",
+        "compare_overall_change": "Overall Energy Variation:",
+        "compare_status_saving": "Community reduced consumption by [bold green]{diff_kwh}[/bold green] ([bold green]{pct}%[/bold green])",
+        "compare_status_increase": "Community increased consumption by [bold red]{diff_kwh}[/bold red] ([bold red]+{pct}%[/bold red])",
+        "compare_status_stable": "Community consumption remained unchanged ({diff_kwh})",
+        "compare_max_decrease": "Biggest Monthly Reduction:",
+        "compare_max_increase": "Biggest Monthly Surge:",
+        "compare_top_saver": "Top Energy Reducer CUPS:",
+        "compare_top_increaser": "Top Energy Increaser CUPS:",
+        "compare_monthly_title": "📅 Monthly Community Consumption & Year-over-Year Variation",
+        "compare_month_col": "Month",
+        "compare_diff_col": "Diff (kWh)",
+        "compare_var_col": "Variation",
+        "compare_trend_col": "Trend",
+        "compare_trend_reduced": "▼ Reduced",
+        "compare_trend_increased": "▲ Increased",
+        "compare_trend_equal": "— Stable",
+        "compare_cups_title": "👥 Supply Points (CUPS) Year-over-Year Evolution",
+        "compare_cups_col": "CUPS",
+        "compare_need_two_years": "At least two years are required for comparison; found: {years}.",
+        "compare_year_not_found": "Requested year(s) {missing} not found in dataset. Available: {available}.",
+        "md_compare_title": "# ⚡ Multi-Year Community Energy Comparison ({years})",
+        "md_compare_overview": "## 1. Executive Comparison Overview",
+        "md_compare_monthly": "## 2. Month-by-Month Consumption Comparison",
+        "md_compare_cups": "## 3. Individual CUPS Evolution",
+        "md_compare_insights": "## 4. Key Comparison Takeaways",
     },
     "es": {
         # App banner & overview
@@ -252,8 +282,117 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "md_section_timeline": "## 3. Cronología Mensual Comunitaria y Mayores Contribuyentes",
         "md_section_monthly": "## 4. Desglose Mensual Detallado por CUPS",
         "md_section_insights": "## 5. Observaciones Clave de la Comunidad",
+        # Compare command
+        "cmd_compare_desc": "Comparar el consumo de energía eléctrica y el porcentaje de variación entre diferentes años.",
+        "opt_compare_years": "Años a comparar (ej. -y 2024 -y 2025 o --years 2024,2025). Por defecto todos los disponibles.",
+        "compare_overview_title": "⚡ Comparativa Energética Interanual de la Comunidad",
+        "compare_years_label": "Años Comparados:",
+        "compare_overall_change": "Variación Energética Total:",
+        "compare_status_saving": "La comunidad redujo su consumo en [bold green]{diff_kwh}[/bold green] ([bold green]{pct}%[/bold green])",
+        "compare_status_increase": "La comunidad aumentó su consumo en [bold red]{diff_kwh}[/bold red] ([bold red]+{pct}%[/bold red])",
+        "compare_status_stable": "El consumo de la comunidad se mantuvo sin cambios ({diff_kwh})",
+        "compare_max_decrease": "Mes con Mayor Reducción:",
+        "compare_max_increase": "Mes con Mayor Incremento:",
+        "compare_top_saver": "CUPS con Mayor Reducción:",
+        "compare_top_increaser": "CUPS con Mayor Incremento:",
+        "compare_monthly_title": "📅 Consumo Mensual y Variación Interanual de la Comunidad",
+        "compare_month_col": "Mes",
+        "compare_diff_col": "Dif. (kWh)",
+        "compare_var_col": "Variación",
+        "compare_trend_col": "Tendencia",
+        "compare_trend_reduced": "▼ Reducción",
+        "compare_trend_increased": "▲ Incremento",
+        "compare_trend_equal": "— Estable",
+        "compare_cups_title": "👥 Evolución Interanual por Punto de Suministro (CUPS)",
+        "compare_cups_col": "CUPS",
+        "compare_need_two_years": "Se requieren al menos dos años para la comparativa; encontrados: {years}.",
+        "compare_year_not_found": "Año(s) solicitado(s) {missing} no encontrado(s). Disponibles: {available}.",
+        "md_compare_title": "# ⚡ Comparativa Energética Interanual de la Comunidad ({years})",
+        "md_compare_overview": "## 1. Resumen Ejecutivo de la Comparativa",
+        "md_compare_monthly": "## 2. Comparativa de Consumo Mes a Mes",
+        "md_compare_cups": "## 3. Evolución Individual por Punto de Suministro (CUPS)",
+        "md_compare_insights": "## 4. Conclusiones Clave de la Comparativa",
     },
 }
+
+MONTH_NAMES: dict[str, dict[int, str]] = {
+    "en": {
+        1: "January",
+        2: "February",
+        3: "March",
+        4: "April",
+        5: "May",
+        6: "June",
+        7: "July",
+        8: "August",
+        9: "September",
+        10: "October",
+        11: "November",
+        12: "December",
+    },
+    "es": {
+        1: "Enero",
+        2: "Febrero",
+        3: "Marzo",
+        4: "Abril",
+        5: "Mayo",
+        6: "Junio",
+        7: "Julio",
+        8: "Agosto",
+        9: "Septiembre",
+        10: "Octubre",
+        11: "Noviembre",
+        12: "Diciembre",
+    },
+}
+
+MONTH_NAMES_SHORT: dict[str, dict[int, str]] = {
+    "en": {
+        1: "Jan",
+        2: "Feb",
+        3: "Mar",
+        4: "Apr",
+        5: "May",
+        6: "Jun",
+        7: "Jul",
+        8: "Aug",
+        9: "Sep",
+        10: "Oct",
+        11: "Nov",
+        12: "Dec",
+    },
+    "es": {
+        1: "Ene",
+        2: "Feb",
+        3: "Mar",
+        4: "Abr",
+        5: "May",
+        6: "Jun",
+        7: "Jul",
+        8: "Ago",
+        9: "Sep",
+        10: "Oct",
+        11: "Nov",
+        12: "Dic",
+    },
+}
+
+
+def get_month_name(month: int, lang: str | None = None, short: bool = False) -> str:
+    """Retrieve localized month name.
+
+    Args:
+        month: Month number (1-12).
+        lang: Target language ('en' or 'es').
+        short: If True, returns 3-letter abbreviation.
+
+    Returns:
+        Formatted month name string.
+    """
+    selected_lang = (lang or get_language()).lower()
+    norm_lang = "es" if selected_lang.startswith("es") else "en"
+    mapping = MONTH_NAMES_SHORT if short else MONTH_NAMES
+    return mapping[norm_lang].get(month, f"M{month:02d}")
 
 
 def t(key: str, lang: str | None = None, **kwargs: Any) -> str:

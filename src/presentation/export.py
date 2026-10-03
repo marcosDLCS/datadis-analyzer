@@ -5,9 +5,9 @@ from datetime import datetime
 from pathlib import Path
 
 from src.config import DEFAULT_OUTPUT_DIR
-from src.i18n import t
+from src.i18n import get_month_name, t
 from src.presentation.console import format_kwh, format_pct
-from src.processing.models import CommunitySummary
+from src.processing.models import CommunitySummary, ComparisonSummary
 
 
 def _make_ascii_bar(pct: float, width: int = 12) -> str:
@@ -253,3 +253,176 @@ def cleanup_output_directory(output_dir: Path | None = None) -> list[Path]:
             removed.append(item)
 
     return removed
+
+
+def export_comparison_markdown(
+    comparison: ComparisonSummary,
+    output_dir: Path | None = None,
+    lang: str | None = None,
+) -> Path:
+    """Generate and persist a complete multi-year comparison report in Markdown format.
+
+    Args:
+        comparison: Aggregated ComparisonSummary dataset.
+        output_dir: Directory where report will be stored.
+        lang: Target language ('en' or 'es').
+
+    Returns:
+        Path to the generated markdown file.
+    """
+    from src.config import load_config
+
+    target_output_dir = output_dir or Path(load_config().output_dir or DEFAULT_OUTPUT_DIR)
+    target_output_dir.mkdir(parents=True, exist_ok=True)
+    now = datetime.now()
+    timestamp_prefix = now.strftime("%Y%m%d_%H%M%S")
+    years_str = "_".join(map(str, comparison.years))
+    filename = f"{timestamp_prefix}_comparison_{years_str}.md"
+    report_path = target_output_dir / filename
+
+    lines: list[str] = []
+
+    # Title & Metadata
+    years_title = " vs ".join(map(str, comparison.years))
+    lines.append(t("md_compare_title", lang=lang, years=years_title))
+    lines.append("")
+    lines.append(f"> {t('md_generated_at', lang=lang, datetime=now.strftime('%Y-%m-%d %H:%M:%S'))}")
+    lines.append("")
+
+    # Section 1: Executive Overview
+    lines.append(t("md_compare_overview", lang=lang))
+    lines.append("")
+    lines.append("| Metric | Value |")
+    lines.append("| :--- | :--- |")
+    lines.append(
+        f"| {t('compare_years_label', lang=lang).rstrip(':')} | **{', '.join(map(str, comparison.years))}** |"
+    )
+    for y in comparison.years:
+        lines.append(
+            f"| {y} Total Community Consumption | **{format_kwh(comparison.annual_totals[y])}** |"
+        )
+
+    diff = comparison.total_diff_kwh
+    pct = comparison.total_pct_change
+    diff_sign = (
+        f"+{format_kwh(diff)}"
+        if diff > 0
+        else f"-{format_kwh(abs(diff))}"
+        if diff < 0
+        else "0.00 kWh"
+    )
+    pct_sign = (
+        f"+{pct:.2f}%"
+        if (pct is not None and pct > 0)
+        else f"{pct:.2f}%"
+        if pct is not None
+        else "N/A"
+    )
+    lines.append(
+        f"| {t('compare_overall_change', lang=lang).rstrip(':')} | **{diff_sign} ({pct_sign})** |"
+    )
+    lines.append("")
+
+    # Section 2: Monthly Comparison Table
+    lines.append(t("md_compare_monthly", lang=lang))
+    lines.append("")
+    year_headers = " | ".join(f"{y} (kWh)" for y in comparison.years)
+    lines.append(
+        f"| {t('compare_month_col', lang=lang)} | {year_headers} | {t('compare_diff_col', lang=lang)} | {t('compare_var_col', lang=lang)} | {t('compare_trend_col', lang=lang)} |"
+    )
+    col_dashes = " | ".join(
+        ":---:" if idx == 0 else "---:" for idx in range(len(comparison.years) + 4)
+    )
+    lines.append(f"| {col_dashes} |")
+
+    for m in comparison.monthly_comparisons:
+        m_name = get_month_name(m.month, lang=lang, short=True)
+        year_vals = " | ".join(f"{m.yearly_kwh.get(y, 0.0):,.2f}" for y in comparison.years)
+        m_diff = (
+            f"+{m.diff_kwh:,.2f}"
+            if m.diff_kwh > 0
+            else f"-{abs(m.diff_kwh):,.2f}"
+            if m.diff_kwh < 0
+            else "0.00"
+        )
+        m_pct = (
+            f"+{m.pct_change:.1f}%"
+            if (m.pct_change is not None and m.pct_change > 0)
+            else f"{m.pct_change:.1f}%"
+            if m.pct_change is not None
+            else "N/A"
+        )
+        m_trend = (
+            t("compare_trend_reduced", lang=lang)
+            if (m.pct_change is not None and m.pct_change < 0)
+            else t("compare_trend_increased", lang=lang)
+            if (m.pct_change is not None and m.pct_change > 0)
+            else t("compare_trend_equal", lang=lang)
+        )
+        lines.append(f"| {m_name} | {year_vals} | {m_diff} | {m_pct} | {m_trend} |")
+
+    # Total row
+    total_vals = " | ".join(f"**{comparison.annual_totals[y]:,.2f}**" for y in comparison.years)
+    lines.append(f"| **Total** | {total_vals} | **{diff_sign}** | **{pct_sign}** | |")
+    lines.append("")
+
+    # Section 3: CUPS shifts (if available)
+    if comparison.cups_comparisons:
+        lines.append(t("md_compare_cups", lang=lang))
+        lines.append("")
+        earliest_y = comparison.years[0]
+        latest_y = comparison.years[-1]
+        lines.append(
+            f"| Rank | {t('compare_cups_col', lang=lang)} | {earliest_y} (kWh) | {latest_y} (kWh) | {t('compare_diff_col', lang=lang)} | {t('compare_var_col', lang=lang)} |"
+        )
+        lines.append("| ---: | :--- | ---: | ---: | ---: | ---: |")
+        for idx, c in enumerate(comparison.cups_comparisons, start=1):
+            c_base = c.yearly_kwh.get(earliest_y, 0.0)
+            c_target = c.yearly_kwh.get(latest_y, 0.0)
+            c_diff = (
+                f"+{c.diff_kwh:,.2f}"
+                if c.diff_kwh > 0
+                else f"-{abs(c.diff_kwh):,.2f}"
+                if c.diff_kwh < 0
+                else "0.00"
+            )
+            c_pct = (
+                f"+{c.pct_change:.1f}%"
+                if (c.pct_change is not None and c.pct_change > 0)
+                else f"{c.pct_change:.1f}%"
+                if c.pct_change is not None
+                else "N/A"
+            )
+            lines.append(
+                f"| {idx} | `{c.cups}` | {c_base:,.2f} | {c_target:,.2f} | {c_diff} | {c_pct} |"
+            )
+        lines.append("")
+
+    # Section 4: Key Insights
+    lines.append(t("md_compare_insights", lang=lang))
+    lines.append("")
+    if comparison.max_decrease_month:
+        m_name = get_month_name(comparison.max_decrease_month.month, lang=lang)
+        pct_val = abs(comparison.max_decrease_month.pct_change or 0.0)
+        lines.append(
+            f"- **{t('compare_max_decrease', lang=lang).rstrip(':')}:** {m_name} (-{pct_val:.1f}% / -{format_kwh(abs(comparison.max_decrease_month.diff_kwh))})"
+        )
+    if comparison.max_increase_month:
+        m_name = get_month_name(comparison.max_increase_month.month, lang=lang)
+        pct_val = comparison.max_increase_month.pct_change or 0.0
+        lines.append(
+            f"- **{t('compare_max_increase', lang=lang).rstrip(':')}:** {m_name} (+{pct_val:.1f}% / +{format_kwh(comparison.max_increase_month.diff_kwh)})"
+        )
+    if comparison.top_saving_cups:
+        lines.append(
+            f"- **{t('compare_top_saver', lang=lang).rstrip(':')}:** `{comparison.top_saving_cups.cups}` (-{format_kwh(abs(comparison.top_saving_cups.diff_kwh))})"
+        )
+    if comparison.top_increasing_cups:
+        lines.append(
+            f"- **{t('compare_top_increaser', lang=lang).rstrip(':')}:** `{comparison.top_increasing_cups.cups}` (+{format_kwh(comparison.top_increasing_cups.diff_kwh)})"
+        )
+    lines.append("")
+
+    report_content = "\n".join(lines) + "\n"
+    report_path.write_text(report_content, encoding="utf-8")
+    return report_path

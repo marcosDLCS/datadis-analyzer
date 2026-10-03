@@ -18,17 +18,24 @@ from src.i18n import t
 from src.ingestion.loader import DatadisLoader
 from src.ingestion.schema import DatadisError
 from src.presentation.console import console
-from src.presentation.export import cleanup_output_directory, export_markdown_summary
+from src.presentation.export import (
+    cleanup_output_directory,
+    export_comparison_markdown,
+    export_markdown_summary,
+)
 from src.presentation.views import (
     render_annual_tables,
     render_cleanup_result,
     render_community_overview,
+    render_comparison_overview,
+    render_cups_comparison_table,
     render_cups_trajectory,
     render_detailed_monthly_breakdown,
     render_export_success,
     render_help,
     render_init_success,
     render_key_insights,
+    render_monthly_comparison_table,
     render_monthly_overview,
     render_validation_issues,
 )
@@ -170,6 +177,115 @@ def clean_alias(
 ) -> None:
     """Alias for 'cleanup'."""
     cleanup_cmd(output_dir=output_dir, force=force, lang=lang)
+
+
+@app.command(name="compare")
+def compare_cmd(
+    input_dir: Path = typer.Option(
+        DEFAULT_INPUT_DIR,
+        "--input-dir",
+        "-i",
+        help="Root directory containing annualized DATADIS CSV exports (default: ./.input).",
+        exists=False,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+    ),
+    years: list[str] | None = typer.Option(
+        None,
+        "--years",
+        "-y",
+        help="Years to compare (e.g. -y 2024 -y 2025 or --years 2024,2025). Defaults to all available years.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        "-o",
+        help="Directory where markdown reports will be stored (default: ./.output).",
+        exists=False,
+        file_okay=False,
+        dir_okay=True,
+        writable=True,
+    ),
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        "-l",
+        help="Temporary language override for this command ('en' or 'es').",
+    ),
+) -> None:
+    """Compare energy consumption across different years, showing monthly deltas, percentage variations, and insights."""
+    effective_lang = lang or get_language()
+    try:
+        effective_lang = normalize_language_code(effective_lang)
+    except ValueError:
+        effective_lang = "en"
+
+    cfg = load_config()
+    target_output_dir = output_dir or Path(cfg.output_dir or DEFAULT_OUTPUT_DIR)
+
+    # Parse years argument if provided
+    target_years: list[int] | None = None
+    if years:
+        target_years = []
+        for item in years:
+            for part in item.split(","):
+                part_clean = part.strip()
+                if not part_clean:
+                    continue
+                if not part_clean.isdigit():
+                    console.print(
+                        f"\n[bold red]Error:[/bold red] Invalid year '{part_clean}'. Expected integer year (e.g. 2025).\n"
+                    )
+                    raise typer.Exit(code=1)
+                target_years.append(int(part_clean))
+
+    loader = DatadisLoader()
+
+    loading_msg = (
+        "[bold cyan]Descubriendo y validando archivos DATADIS...[/bold cyan]"
+        if effective_lang == "es"
+        else "[bold cyan]Discovering and validating DATADIS export files...[/bold cyan]"
+    )
+    comp_msg = (
+        "[bold cyan]Calculando comparativa interanual y variaciones...[/bold cyan]"
+        if effective_lang == "es"
+        else "[bold cyan]Calculating multi-year comparisons and variations...[/bold cyan]"
+    )
+
+    with console.status(loading_msg, spinner="dots"):
+        try:
+            df, validation_results = loader.load_all(base_dir=input_dir)
+        except DatadisError as exc:
+            console.print(f"\n[bold red]Error:[/bold red] {exc}\n")
+            raise typer.Exit(code=1) from exc
+
+    with console.status(comp_msg, spinner="dots"):
+        try:
+            comparison = DataAggregator.compare_years(df=df, target_years=target_years)
+        except DatadisError as exc:
+            console.print(f"\n[bold red]Error:[/bold red] {exc}\n")
+            raise typer.Exit(code=1) from exc
+
+    # 1. Validation warnings (if any)
+    render_validation_issues(validation_results, lang=effective_lang)
+
+    # 2. Executive overview card
+    render_comparison_overview(comparison, lang=effective_lang)
+
+    # 3. Monthly comparison table
+    render_monthly_comparison_table(comparison, lang=effective_lang)
+
+    # 4. CUPS-level shifts table
+    render_cups_comparison_table(comparison, lang=effective_lang)
+
+    # 5. Export markdown report
+    report_file = export_comparison_markdown(
+        comparison=comparison,
+        output_dir=target_output_dir,
+        lang=effective_lang,
+    )
+    render_export_success(report_file, lang=effective_lang)
 
 
 @app.command(name="summary")

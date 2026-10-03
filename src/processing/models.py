@@ -99,3 +99,66 @@ class CommunitySummary:
     peak_month_kwh: float
     lowest_month_label: str
     lowest_month_kwh: float
+
+
+@dataclass
+class MonthComparison:
+    """Monthly comparison across years for the community.
+
+    Attributes:
+        month: Calendar month (1-12).
+        yearly_kwh: Mapping of year to community total kWh for this month.
+        diff_kwh: Difference between target (latest) and base (earliest) year.
+        pct_change: Percentage change between base and target year (None if base is zero).
+    """
+
+    month: int
+    yearly_kwh: dict[int, float]
+    diff_kwh: float
+    pct_change: float | None
+
+
+@dataclass
+class CupsComparison:
+    """Year-over-year comparison for an individual supply point (CUPS).
+
+    Attributes:
+        cups: Universal Supply Point Code.
+        yearly_kwh: Mapping of year to annual consumption.
+        diff_kwh: Consumption difference between target (latest) and base (earliest) year.
+        pct_change: Percentage change between base and target year (None if base is zero).
+    """
+
+    cups: str
+    yearly_kwh: dict[int, float]
+    diff_kwh: float
+    pct_change: float | None
+
+
+@dataclass
+class ComparisonSummary:
+    """Complete multi-year comparison summary for the residential community.
+
+    Attributes:
+        years: Sorted list of calendar years being compared.
+        monthly_comparisons: Comparison for each month with recorded data.
+        annual_totals: Total community consumption per year.
+        total_diff_kwh: Net community consumption difference between latest and earliest year.
+        total_pct_change: Overall percentage variation.
+        max_increase_month: Month with the highest consumption increase (if any).
+        max_decrease_month: Month with the highest consumption decrease (if any).
+        top_saving_cups: CUPS with the largest kWh reduction.
+        top_increasing_cups: CUPS with the largest kWh increase.
+        cups_comparisons: Full list of individual CUPS comparisons sorted by kWh change.
+    """
+
+    years: list[int]
+    monthly_comparisons: list[MonthComparison]
+    annual_totals: dict[int, float]
+    total_diff_kwh: float
+    total_pct_change: float | None
+    max_increase_month: MonthComparison | None
+    max_decrease_month: MonthComparison | None
+    top_saving_cups: CupsComparison | None
+    top_increasing_cups: CupsComparison | None
+    cups_comparisons: list[CupsComparison]
