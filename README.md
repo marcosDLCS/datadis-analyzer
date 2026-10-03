@@ -1,7 +1,6 @@
 # ⚡ DATADIS Analyzer (`da`)
 
-> *Bringing mathematical clarity, transparency, and peace of mind to residential community energy management.*
-> *(Because no building meeting (*junta de propietarios*) should ever descend into chaos over who ran the heat pump.)*
+> Energy analytics and fair-share allocation CLI for residential communities (*comunidades de vecinos*) in Spain.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![CLI Framework](https://img.shields.io/badge/CLI-Typer-009688?style=flat)](https://typer.tiangolo.com/)
@@ -12,33 +11,22 @@
 
 ---
 
-## 🌟 What is DATADIS Analyzer?
-
-`datadis-analyzer` is a modern, modular Python command-line application (`da`) designed to ingest, validate, aggregate, and visualize hourly electrical consumption data exported from Spain's national [DATADIS](https://datadis.es) platform for residential communities (*comunidades de vecinos*).
-
-Whether your building has collective geothermal pumps, shared aerothermal systems, common lighting, or 40 individual apartments, `da` computes each supply point's exact fair-share contribution down to two decimal places.
-
----
-
 ## 🚀 Key Capabilities
 
-- **🔍 Auto-Detecting Ingestion Engine:** Transparently handles Spanish CSV exports:
-  - Delimiters: `;`, `,`, or `\t`
-  - Decimal formats: Spanish comma `0,152` vs English dot `0.152`
-  - Encodings: `utf-8`, `utf-8-sig`, `latin-1`, and `cp1252`
-- **🧮 100.00% Share Invariant:** Calculates the exact mathematical share of collective consumption for every individual CUPS (*Código Unificado de Punto de Suministro*), ensuring period totals always sum to exactly 100.00%.
-- **📊 Rich Terminal Visualizations:** Displays colorized metrics cards, interactive tables, inline ASCII percentage bars (`████████░░`), and analytical alerts for dominant (`★`) and inactive (`(0)`) meters.
-- **🌐 Dual-Language Support:** First-class internationalization in both **English** (`en`) and **Spanish** (`es`), selectable interactively or via flags and persisted across sessions.
-- **📝 Automated Markdown Reports:** Every summary generation automatically archives a clean, dated report into `.output/YYYYMMDD_HHMMSS_community_summary.md`.
+- **🔍 Multi-Dialect CSV Ingestion:** Automatically detects delimiters (`;`, `,`, `\t`), decimal notations (`0,152` vs `0.152`), character encodings (`utf-8`, `utf-8-sig`, `latin-1`, `cp1252`), and date formats (`YYYY/MM/DD`, `YYYY-MM-DD`).
+- **🧮 Exact Fair-Share Math:** Calculates each supply point's (CUPS) percentage share of collective community consumption across months and years, guaranteed to sum to exactly 100.00%.
+- **📊 Rich Terminal Visualizations:** Renders interactive tables, metric overview cards, inline percentage bars (`████████░░`), and alerts for dominant (`★`) or inactive (`(0)`) meters.
+- **🌐 Dual-Language Support:** Full English (`en`) and Spanish (`es`) localization, persisted across commands via `.da_config.json`.
+- **📝 Automated Markdown Reporting:** Exports timestamped reports directly into `.output/YYYYMMDD_HHMMSS_*.md`.
 
 ---
 
-## 🏗️ System Architecture & Data Flow
+## 🏗️ Architecture & Data Flow
 
 ```mermaid
 flowchart LR
     subgraph Ingestion ["📥 Ingestion & Validation"]
-        CSV["📁 .input/<year>/*.csv\n(Auto delimiters & encodings)"] --> VAL["🔍 DatadisValidator\n(Schema & encoding checks)"]
+        CSV["📁 .input/<year>/*.csv\n(Auto-detect dialects)"] --> VAL["🔍 DatadisValidator\n(Schema & encoding checks)"]
         VAL --> NORM["🧹 DatadisLoader\n(Pandas normalization)"]
     end
 
@@ -47,7 +35,7 @@ flowchart LR
         AGG --> MATH["📐 Share Engine\n(Σ shares = 100.00%)"]
     end
 
-    subgraph Presentation ["📊 Presentation & Output"]
+    subgraph Presentation ["📊 Presentation & Export"]
         MATH --> RICH["✨ Rich Terminal UI\n(Tables, Bars, Insights)"]
         MATH --> EXP["📝 Markdown Reports\n(.output/YYYYMMDD_HHMMSS_*.md)"]
     end
@@ -55,9 +43,7 @@ flowchart LR
 
 ---
 
-## 🖥️ Terminal Experience Preview
-
-Here is a glimpse of what `da summary` renders in your terminal:
+## 🖥️ Terminal Output Preview
 
 ```text
 ╭──────────────── ⚡ DATADIS RESIDENTIAL COMMUNITY ENERGY SUMMARY ────────────────╮
@@ -85,214 +71,130 @@ Legend: ★ Dominant Consumer (>30% of total)  |  (0) Inactive supply (<1 kWh)
 
 ```text
 datadis-analyzer/
-├── pyproject.toml              # Build metadata, dependencies, and CLI script entrypoint (`da`)
-├── requirements.txt            # Core, dev, and test dependency manifest
-├── LICENSE                     # Standard MIT open-source license
-├── README.md                   # User documentation and visual guide
-├── AGENTS.md                   # Technical reference and AI agent guidelines
-├── CONTRIBUTING.md             # Contribution workflow & Conventional Commits specification
-├── .pre-commit-config.yaml     # Pre-commit hook configuration (Ruff linter & formatter)
-├── .da_config.json             # Persistent application configuration (language, paths)
-├── .input/                     # Annualized DATADIS CSV export directories
-│   ├── 2024/
-│   ├── 2025/
-│   └── 2026/
-├── .output/                    # Auto-generated markdown reports & export archives
+├── pyproject.toml              # Build config, dependencies, and CLI entry point (da)
+├── requirements.txt            # Package dependencies manifest
+├── LICENSE                     # Standard MIT license
+├── README.md                   # User documentation and guide
+├── AGENTS.md                   # Agent and technical developer directives
+├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits
+├── .pre-commit-config.yaml     # Pre-commit hook definitions (Ruff linter & formatter)
+├── .da_config.json             # Persistent application configuration
+├── .input/                     # Annualized raw CSV files (.input/<year>/*.csv)
+├── .output/                    # Auto-generated markdown reports & archives
 ├── src/
-│   ├── __init__.py             # Package marker and version
-│   ├── cli.py                  # Typer CLI application, subcommands, and options
-│   ├── config.py               # Constants, column schemas, and path helpers
-│   ├── i18n.py                 # Multi-language translation engine (English & Spanish)
-│   ├── ingestion/
-│   │   ├── __init__.py
-│   │   ├── schema.py           # Dataclass models for validation results and exceptions
-│   │   ├── validator.py        # Delimiter/encoding detector and schema validator
-│   │   └── loader.py           # Directory scanner and pandas DataFrame normalizer
-│   ├── processing/
-│   │   ├── __init__.py
-│   │   ├── models.py           # Typed domain summary containers (CupsShare, CommunitySummary)
-│   │   └── aggregator.py       # Aggregation engine, monthly/annual grouping, and share math
-│   └── presentation/
-│       ├── __init__.py
-│       ├── console.py          # Rich console instance, palettes, and visual bar generators
-│       ├── views.py            # Formatted tables, overview panels, help, and insights
-│       └── export.py           # Markdown report exporter into .output/
-└── tests/
-    ├── __init__.py
-    ├── conftest.py             # Reusable mock datasets and temporary directory fixtures
-    ├── test_validator.py       # Encoding, delimiter, and schema validation tests
-    ├── test_loader.py          # Discovery, normalization, and DataFrame parsing tests
-    ├── test_aggregator.py      # Period grouping, share calculations (100% sum), and pivots
-    ├── test_cli.py             # CLI runner integration tests for all commands and options
-    └── test_config_and_export.py # Config persistence, language switching, and markdown export tests
+│   ├── cli.py                  # Typer CLI application and command handlers
+│   ├── config.py               # Constants, column definitions, and path helpers
+│   ├── i18n.py                 # Multi-language translation engine (en/es)
+│   ├── ingestion/              # Delimiter detection, validation, and Pandas loader
+│   ├── processing/             # Aggregation engine, domain models, and share math
+│   └── presentation/           # Rich console UI, views, and Markdown exporter
+└── tests/                      # Automated unit, integration, and CLI test suite
 ```
 
 ---
 
 ## 📦 Installation & Setup
 
-### 1. Clone & Set Up Virtual Environment
-
 ```bash
+# 1. Clone repository & create virtual environment
 git clone git@github.com:marcosDLCS/datadis-analyzer.git
 cd datadis-analyzer
-
 python3 -m venv .venv
 source .venv/bin/activate
-```
 
-### 2. Install Package with Development Tools
-
-```bash
+# 2. Install dependencies with development tools
 pip install --upgrade pip
 pip install -e ".[dev]"
-```
 
-### 3. Install Git Pre-Commit Hooks
-
-```bash
+# 3. Install git pre-commit hooks
 pre-commit install
-```
 
-> [!TIP]
-> Installing pre-commit hooks guarantees that **Ruff** will auto-lint and format your code before every commit. No awkward CI failures!
-
-### 4. Initialize Workspace & Language Preference
-
-```bash
+# 4. Initialize workspace directories (.input, .output) and set language
 da init
 ```
-
-This interactive command creates the `./.input` and `./.output` directories and persists your preferred language in `.da_config.json`.
 
 ---
 
 ## 📂 Input Data Conventions
 
-Organize your raw DATADIS CSV downloads inside `./.input/<year>/`:
+Place DATADIS CSV files into annualized subdirectories inside `./.input/<year>/`:
 
 ```text
 .input/
   ├── 2025/
   │   ├── ES0021000000000001AA_Consumo_01-01-2025_31-12-2025.csv
-  │   ├── ES0021000000000002BB_Consumo_01-01-2025_31-12-2025.csv
-  │   └── ...
+  │   └── ES0021000000000002BB_Consumo_01-01-2025_31-12-2025.csv
   └── 2026/
-      ├── ES0021000000000001AA_Consumo_01-01-2026_30-09-2026.csv
       └── ...
 ```
 
 > [!IMPORTANT]
-> **Privacy First:** DATADIS exports contain private household data. Never commit real CUPS files to version control. Keep `.input/` for local processing only.
+> **Data Privacy:** DATADIS exports contain private household data. Never commit real CUPS files to version control. The `./.input/` directory is ignored by git for privacy.
 
-Required columns in DATADIS files (case-insensitive, semicolon or comma delimited):
+Required columns (semicolon or comma delimited):
 | Column | Description | Example |
 | :--- | :--- | :--- |
 | `cups` | Universal Supply Point Code | `"ES0021000000000001AA"` |
-| `fecha` | Reading date | `"2025/01/15"` or `"2025-01-15"` |
+| `fecha` | Reading date | `"2025/01/15"` |
 | `hora` | Hour interval (`01:00` to `24:00`) | `"14:00"` |
-| `consumo_kWh` | Energy consumed during interval | `"0,152"` or `"0.152"` |
+| `consumo_kWh` | Interval energy consumption | `"0,152"` or `"0.152"` |
 
 ---
 
 ## 🎮 CLI Usage Manual
 
-```text
-Usage: da [OPTIONS] COMMAND [ARGS]...
+### ⚙️ Workspace Configuration (`da init`)
+```bash
+da init                 # Interactive language selection
+da init --language es   # Set language to Spanish
+da init -l en           # Set language to English
 ```
 
-### ⚙️ 1. Workspace & Language Init (`da init`)
+### 📖 Help & Manual (`da help`)
 ```bash
-# Interactive prompt (English / Spanish):
-da init
-
-# Or directly via flag:
-da init --language es
-da init -l en
+da help                 # Display interactive reference manual
+da help --lang es       # Display help in Spanish
 ```
 
-### 📖 2. Interactive Reference Manual (`da help`)
+### 📊 Community Summary (`da summary`)
 ```bash
-da help
-# or in Spanish:
-da help --lang es
+da summary              # Annual & monthly community overview + markdown export
+da summary --year 2025  # Filter to a specific year
+da summary --view monthly # Full month-by-month CUPS breakdown table
+da summary --cups ES0021000000000001AA # Dedicated CUPS trajectory
+da summary --input-dir /path/to/input   # Custom input directory
 ```
 
-### 📊 3. Community Energy Summary (`da summary`)
-Calculates community aggregation across all files in `./.input/` and saves a timestamped Markdown report into `./.output/`:
-
+### 🧹 Output Cleanup (`da cleanup` / `da clean`)
 ```bash
-# Complete summary (annual + monthly overview + insights):
-da summary
-
-# Focus on a specific calendar year:
-da summary --year 2025
-
-# Show detailed month-by-month CUPS breakdown table:
-da summary --view monthly
-
-# Trace the consumption trajectory of an individual CUPS:
-da summary --cups ES0021000000000001AA
-
-# Point to an alternate input folder:
-da summary --input-dir /path/to/custom_input
-```
-
-### 🧹 4. Output Cleanup (`da cleanup` / `da clean`)
-Remove all generated reports and clear files from the `./.output/` folder:
-
-```bash
-# Interactive cleanup (prompts for confirmation [y/N]):
-da cleanup
-
-# Force cleanup without confirmation (ideal for CI/scripts):
-da cleanup --force
-# or short alias:
-da clean -f
-
-# Clean a custom output folder:
-da cleanup --output-dir /path/to/custom_output -f
+da cleanup              # Interactive cleanup (prompts before deletion)
+da cleanup --force      # Immediate deletion without confirmation
+da clean -f             # Short alias
+da cleanup --output-dir /path/to/output -f # Clean custom output directory
 ```
 
 ---
 
 ## 🧪 Quality Assurance & Tooling
 
-We keep our codebase clean, fast, and strictly typed:
-
 ```bash
-# 🧪 Run full automated test suite (35+ tests)
+# Run test suite (41 automated tests)
 pytest -v
 
-# 🔍 Run Ruff linter checks
-ruff check .
-
-# ✨ Auto-fix linting issues
+# Run Ruff linter and code formatter
 ruff check --fix .
-
-# 🎨 Auto-format code with Python Prettier (Ruff format)
 ruff format .
 
-# 🛡️ Run all pre-commit hooks manually
+# Verify pre-commit hooks across all files
 pre-commit run --all-files
 ```
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing & License
 
-Contributions are warmly welcome! Please check out:
-- 📘 [CONTRIBUTING.md](CONTRIBUTING.md) — Coding conventions, Conventional Commits guide, and Pull Request workflow.
-- 🤖 [AGENTS.md](AGENTS.md) — Technical instructions, architectural standards, and guidelines for AI coding agents.
+Contributions are welcome. Please consult:
+- 📘 [CONTRIBUTING.md](CONTRIBUTING.md) — Coding conventions, Conventional Commits specification, and PR workflow.
+- 🤖 [AGENTS.md](AGENTS.md) — Technical instructions and architectural guidelines for AI agents and developers.
 
----
-
-## 📄 License
-
-This project is open-source software licensed under the terms of the [MIT License](LICENSE).
-
-```text
-MIT License — Copyright (c) 2026 Marcos de la Calle
-```
-
-You are free to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, provided the copyright notice and permission notice are preserved. See the full text in [LICENSE](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
