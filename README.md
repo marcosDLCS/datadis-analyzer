@@ -154,6 +154,8 @@ da init                 # Interactive language selection and directory initializ
 da init --language es   # Set language to Spanish and mark initialized
 da init -l en           # Set language to English and mark initialized
 ```
+The initialization records the active version and timestamp in `.da_config.json` and prepares workspace folders.
+
 
 ### 🏷️ Version Display (`da version`)
 ```bash

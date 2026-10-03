@@ -110,8 +110,9 @@ def init_cmd(
         console.print(f"\n[bold red]Error:[/bold red] {exc}\n")
         raise typer.Exit(code=1) from exc
 
-    # Persist initialization timestamp
-    mark_initialized()
+    # Persist initialization timestamp and active version
+    current_ver = get_version()
+    mark_initialized(version=current_ver)
 
     input_dir, output_dir = ensure_directories()
 
@@ -121,7 +122,7 @@ def init_cmd(
         input_dir=input_dir,
         output_dir=output_dir,
         lang=lang_code,
-        version=get_version(),
+        version=current_ver,
     )
 
 

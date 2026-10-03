@@ -119,7 +119,7 @@ pre-commit run --all-files # Run all git hooks
 5. **Special CUPS Classification:**
    - Dominant consumer (`★`): >30% of total consumption (e.g., community HVAC/pumps).
    - Inactive supply (`(0)`): <1 kWh total consumption.
-6. **Mandatory Workspace Initialization Invariant:** `da init` must be successfully run before executing `da summary`, `da compare`, or `da cleanup`. The command records `initialized_at` timestamp in `.da_config.json`.
+6. **Mandatory Workspace Initialization Invariant:** `da init` must be successfully run before executing `da summary`, `da compare`, or `da cleanup`. The command records the `initialized_at` timestamp and active CalVer `version` in `.da_config.json`.
 7. **CalVer Pattern Invariant:** The version string adheres strictly to `<year>.<month>.<incremental number (3 positions)>` (e.g. `2026.10.001`). The version appears in the console banner, during `da init`, and in all generated markdown reports.
 
 ---

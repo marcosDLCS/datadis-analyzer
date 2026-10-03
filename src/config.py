@@ -66,12 +66,14 @@ class AppConfig:
         input_dir: Default input folder path.
         output_dir: Default output folder path for markdown reports.
         initialized_at: ISO timestamp recording when 'da init' was successfully run.
+        version: Application version recorded at initialization time (CalVer YYYY.MM.NNN).
     """
 
     language: str = "en"
     input_dir: str = ".input"
     output_dir: str = ".output"
     initialized_at: str | None = None
+    version: str | None = None
 
 
 def normalize_language_code(lang_raw: str) -> str:
@@ -109,6 +111,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             input_dir=data.get("input_dir", ".input"),
             output_dir=data.get("output_dir", ".output"),
             initialized_at=data.get("initialized_at"),
+            version=data.get("version"),
         )
     except Exception:
         return AppConfig()
@@ -123,18 +126,25 @@ def is_initialized(path: Path | None = None) -> bool:
     return bool(cfg.initialized_at)
 
 
-def mark_initialized(path: Path | None = None, timestamp: str | None = None) -> str:
-    """Record and persist an initialization timestamp in the application settings.
+def mark_initialized(
+    path: Path | None = None,
+    timestamp: str | None = None,
+    version: str | None = None,
+) -> str:
+    """Record and persist an initialization timestamp and version in settings.
 
     Returns:
         The persisted ISO datetime string.
     """
     from datetime import datetime
 
+    from src.version import get_version
+
     target_path = path or CONFIG_FILE_PATH
     cfg = load_config(target_path)
     ts = timestamp or datetime.now().isoformat()
     cfg.initialized_at = ts
+    cfg.version = version or cfg.version or get_version()
     save_config(cfg, target_path)
     return ts
 

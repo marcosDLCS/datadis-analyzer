@@ -126,10 +126,32 @@ def test_cli_init_displays_version(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert get_version() in result.stdout
     assert "DATADIS Analyzer Version:" in result.stdout
 
-    # Verify initialized_at was written to config
+    # Verify initialized_at and version were written to config
     cfg = load_config(test_config)
     assert cfg.initialized_at is not None
+    assert cfg.version == get_version()
     assert is_initialized(test_config) is True
+
+
+def test_config_serialization_saves_version(tmp_path: Path) -> None:
+    """Config saves active version and deserializes seamlessly."""
+    import json
+
+    from src.config import AppConfig, load_config, save_config
+
+    test_file = tmp_path / "test_standard_config.json"
+    cfg = AppConfig(
+        language="es",
+        initialized_at="2026-10-03T20:00:00",
+        version="2026.10.006",
+    )
+    save_config(cfg, test_file)
+
+    raw_json = json.loads(test_file.read_text(encoding="utf-8"))
+    assert raw_json["version"] == "2026.10.006"
+
+    loaded = load_config(test_file)
+    assert loaded.version == "2026.10.006"
 
 
 def test_mandatory_init_blocks_summary_when_not_initialized(

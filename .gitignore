@@ -222,3 +222,6 @@ __marimo__/
 # Project
 .input
 .output
+
+# MacOS
+.DS_Store
