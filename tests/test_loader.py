@@ -1,6 +1,7 @@
 """Tests for DATADIS data loader, file discovery, and normalization."""
 
 from pathlib import Path
+
 import pytest
 
 from src.config import (

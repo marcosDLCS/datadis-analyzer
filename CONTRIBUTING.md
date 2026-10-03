@@ -61,13 +61,21 @@ DATADIS CSV exports contain sensitive information:
    pip install -e ".[dev]"
    ```
 
-4. **Verify the installation:**
+4. **Install git pre-commit hooks:**
+   ```bash
+   pre-commit install
+   ```
+   This automatically runs Ruff linting, formatting, and file sanity checks before every `git commit`.
+
+5. **Verify the installation:**
    ```bash
    da --help
    pytest
+   ruff check .
+   ruff format --check .
    ```
 
-5. **Initialize local workspace directories:**
+6. **Initialize local workspace directories:**
    ```bash
    da init
    ```
@@ -136,6 +144,13 @@ Common scopes include:
 - Keep line lengths reasonable (maximum 100–120 characters).
 - Maintain modular architecture: keep data ingestion (`src/ingestion/`), domain processing (`src/processing/`), and visual presentation (`src/presentation/`) strictly separated.
 
+### Linting & Formatting (Ruff & Pre-Commit)
+We enforce clean, consistent code style using [Ruff](https://astral.sh/ruff), the high-performance Python linter and code formatter:
+- **Linting:** `ruff check .` (run `ruff check --fix .` to automatically fix common lint issues).
+- **Formatting (Prettier for Python):** `ruff format .` (run `ruff format --check .` to verify formatting in CI).
+- **Pre-commit Automation:** Git pre-commit hooks ensure that all staged Python files pass Ruff linting and formatting before any commit is accepted. Install once via `pre-commit install`.
+- **Manual Hook Verification:** Run all hooks across the codebase with `pre-commit run --all-files`.
+
 ### Terminal UI Aesthetics
 - Keep Rich tables responsive and compact.
 - Ensure terminal tables fit comfortably within standard **80-column terminals** without line wraps or broken column alignments (`no_wrap=True` for identifiers, numbers, and percentages).
@@ -202,6 +217,7 @@ pytest tests/test_aggregator.py -v
    - Confirm that the PR checklist has been satisfied:
      - [ ] Commits follow the Conventional Commits specification.
      - [ ] All automated tests pass (`pytest -v`).
+     - [ ] Pre-commit hooks and Ruff checks pass (`pre-commit run --all-files`).
      - [ ] No real CUPS codes or personal data are included.
      - [ ] Both English and Spanish translations are updated in `src/i18n.py` (if applicable).
      - [ ] Documentation (`README.md`, `AGENTS.md`) is updated if CLI options or behaviors changed.

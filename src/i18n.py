@@ -1,6 +1,6 @@
 """Internationalization (i18n) module supporting English and Spanish localization."""
 
-from typing import Any, Optional
+from typing import Any
 
 from src.config import get_language
 
@@ -242,7 +242,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
 }
 
 
-def t(key: str, lang: Optional[str] = None, **kwargs: Any) -> str:
+def t(key: str, lang: str | None = None, **kwargs: Any) -> str:
     """Translate a given key into the target language with keyword formatting.
 
     Args:

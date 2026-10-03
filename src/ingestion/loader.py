@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -29,10 +28,12 @@ logger = logging.getLogger(__name__)
 class DatadisLoader:
     """Traverses, validates, and loads DATADIS energy consumption CSV exports into pandas DataFrames."""
 
-    def __init__(self, validator: Optional[DatadisValidator] = None) -> None:
+    def __init__(self, validator: DatadisValidator | None = None) -> None:
         self.validator = validator or DatadisValidator()
 
-    def discover_files(self, base_dir: Path = DEFAULT_INPUT_DIR, year: Optional[int] = None) -> list[Path]:
+    def discover_files(
+        self, base_dir: Path = DEFAULT_INPUT_DIR, year: int | None = None
+    ) -> list[Path]:
         """Discover DATADIS CSV files located in annualized directories under base_dir.
 
         Args:
@@ -55,8 +56,10 @@ class DatadisLoader:
         if not csv_files:
             # Scan recursively under base directory
             csv_files = [
-                p for p in base_dir.rglob("*.csv")
-                if not p.name.startswith(".") and not any(part.startswith(".") and part != base_dir.name for part in p.parts)
+                p
+                for p in base_dir.rglob("*.csv")
+                if not p.name.startswith(".")
+                and not any(part.startswith(".") and part != base_dir.name for part in p.parts)
             ]
 
         # Filter out hidden or backup files
@@ -128,7 +131,9 @@ class DatadisLoader:
             parsed_dates = pd.to_datetime(date_raw, format="mixed", errors="coerce")
 
             if parsed_dates.isna().all():
-                raise DatadisParseError(f"Could not parse any valid dates from 'fecha' in {file_path.name}")
+                raise DatadisParseError(
+                    f"Could not parse any valid dates from 'fecha' in {file_path.name}"
+                )
 
             df[COL_DATE] = parsed_dates
             df[COL_YEAR] = df[COL_DATE].dt.year.astype(int)
@@ -139,12 +144,12 @@ class DatadisLoader:
             return df[keep_cols]
 
         except Exception as exc:
-            if isinstance(exc, (DatadisValidationError, DatadisParseError)):
+            if isinstance(exc, DatadisValidationError | DatadisParseError):
                 raise
             raise DatadisParseError(f"Failed to parse {file_path.name}: {exc}") from exc
 
     def load_all(
-        self, base_dir: Path = DEFAULT_INPUT_DIR, year: Optional[int] = None
+        self, base_dir: Path = DEFAULT_INPUT_DIR, year: int | None = None
     ) -> tuple[pd.DataFrame, list[ValidationResult]]:
         """Load and aggregate all DATADIS CSV files found in the directory tree.
 

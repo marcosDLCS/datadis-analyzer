@@ -2,6 +2,7 @@
 
 import re
 from pathlib import Path
+
 from typer.testing import CliRunner
 
 from src.cli import app

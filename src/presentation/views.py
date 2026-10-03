@@ -1,7 +1,6 @@
 """Terminal views, tables, cards, and help screens rendered with Rich."""
 
 from pathlib import Path
-from typing import Optional
 
 from rich import box
 from rich.align import Align
@@ -12,10 +11,10 @@ from rich.text import Text
 from src.i18n import t
 from src.ingestion.schema import ValidationResult
 from src.presentation.console import console, format_kwh, format_pct, make_share_bar
-from src.processing.models import CommunitySummary, CupsShare
+from src.processing.models import CommunitySummary
 
 
-def render_help(lang: Optional[str] = None) -> None:
+def render_help(lang: str | None = None) -> None:
     """Render a comprehensive, formatted help screen for the DATADIS CLI tool."""
     title_text = Text()
     title_text.append(f"{t('app_title', lang=lang)} ", style="bold yellow")
@@ -33,7 +32,9 @@ def render_help(lang: Optional[str] = None) -> None:
     )
 
     # Overview
-    console.print(f"[bold cyan]{t('overview_heading', lang=lang)}[/bold cyan]\n{t('overview_text', lang=lang)}\n")
+    console.print(
+        f"[bold cyan]{t('overview_heading', lang=lang)}[/bold cyan]\n{t('overview_text', lang=lang)}\n"
+    )
 
     # Commands Table
     cmd_table = Table(
@@ -105,18 +106,32 @@ def render_help(lang: Optional[str] = None) -> None:
     console.print()
 
     # Folder Structure & Examples in Panels
-    console.print(Panel(t("data_layout_desc", lang=lang), title=t("data_layout_title", lang=lang), border_style="blue", box=box.ROUNDED))
+    console.print(
+        Panel(
+            t("data_layout_desc", lang=lang),
+            title=t("data_layout_title", lang=lang),
+            border_style="blue",
+            box=box.ROUNDED,
+        )
+    )
     console.print()
-    console.print(Panel(t("quick_start_text", lang=lang), title=t("quick_start_title", lang=lang), border_style="green", box=box.ROUNDED))
+    console.print(
+        Panel(
+            t("quick_start_text", lang=lang),
+            title=t("quick_start_title", lang=lang),
+            border_style="green",
+            box=box.ROUNDED,
+        )
+    )
     console.print()
 
 
 def render_init_success(
     lang_code: str,
     config_path: Path,
-    input_dir: Optional[Path] = None,
-    output_dir: Optional[Path] = None,
-    lang: Optional[str] = None,
+    input_dir: Path | None = None,
+    output_dir: Path | None = None,
+    lang: str | None = None,
 ) -> None:
     """Render confirmation message after running da init."""
     target_lang = lang or lang_code
@@ -128,7 +143,9 @@ def render_init_success(
         message_lines.append(
             f"✔ {t('init_folders_created', lang=target_lang, input_dir=str(input_dir), output_dir=str(output_dir))}"
         )
-    message_lines.append(f"[dim]{t('init_persistence_note', lang=target_lang, path=str(config_path))}[/dim]")
+    message_lines.append(
+        f"[dim]{t('init_persistence_note', lang=target_lang, path=str(config_path))}[/dim]"
+    )
 
     message = "\n".join(message_lines)
     console.print()
@@ -144,7 +161,9 @@ def render_init_success(
     console.print()
 
 
-def render_validation_issues(validation_results: list[ValidationResult], lang: Optional[str] = None) -> None:
+def render_validation_issues(
+    validation_results: list[ValidationResult], lang: str | None = None
+) -> None:
     """Render a warning table if any CSV files failed validation."""
     invalid_results = [r for r in validation_results if not r.is_valid]
     if not invalid_results:
@@ -160,13 +179,17 @@ def render_validation_issues(validation_results: list[ValidationResult], lang: O
     table.add_column(t("col_issue", lang=lang), style="dim white")
 
     for res in invalid_results:
-        table.add_row(res.file_path.name, "SKIPPED", res.error_message or "Unknown validation issue")
+        table.add_row(
+            res.file_path.name, "SKIPPED", res.error_message or "Unknown validation issue"
+        )
 
     console.print(table)
     console.print()
 
 
-def render_community_overview(summary: CommunitySummary, file_count: int, lang: Optional[str] = None) -> None:
+def render_community_overview(
+    summary: CommunitySummary, file_count: int, lang: str | None = None
+) -> None:
     """Render a high-level metrics card summarizing community figures."""
     grid = Table.grid(expand=True, padding=(0, 2))
     grid.add_column(ratio=1)
@@ -198,9 +221,9 @@ def render_community_overview(summary: CommunitySummary, file_count: int, lang: 
 
 def render_annual_tables(
     summary: CommunitySummary,
-    filter_cups: Optional[str] = None,
-    filter_year: Optional[int] = None,
-    lang: Optional[str] = None,
+    filter_cups: str | None = None,
+    filter_year: int | None = None,
+    lang: str | None = None,
 ) -> None:
     """Render formatted annual consumption tables with percentage share visual bars."""
     years_to_display = (
@@ -228,8 +251,15 @@ def render_annual_tables(
             show_footer=True,
         )
 
-        table.add_column(t("col_rank", lang=lang), justify="right", style="dim", width=2, no_wrap=True)
-        table.add_column(t("col_cups", lang=lang), style="bold white", footer=t("col_total", lang=lang), no_wrap=True)
+        table.add_column(
+            t("col_rank", lang=lang), justify="right", style="dim", width=2, no_wrap=True
+        )
+        table.add_column(
+            t("col_cups", lang=lang),
+            style="bold white",
+            footer=t("col_total", lang=lang),
+            no_wrap=True,
+        )
         table.add_column(
             t("col_consumption", lang=lang),
             justify="right",
@@ -267,9 +297,9 @@ def render_annual_tables(
 
 def render_monthly_overview(
     summary: CommunitySummary,
-    filter_cups: Optional[str] = None,
-    filter_year: Optional[int] = None,
-    lang: Optional[str] = None,
+    filter_cups: str | None = None,
+    filter_year: int | None = None,
+    lang: str | None = None,
 ) -> None:
     """Render a concise monthly timeline overview showing community consumption and top contributor."""
     filtered_months = summary.monthly_summaries
@@ -285,9 +315,13 @@ def render_monthly_overview(
         header_style="bold cyan",
     )
     table.add_column(t("col_period", lang=lang), style="bold white", width=7, no_wrap=True)
-    table.add_column(t("col_community_total", lang=lang), justify="right", style="bold bright_cyan", no_wrap=True)
+    table.add_column(
+        t("col_community_total", lang=lang), justify="right", style="bold bright_cyan", no_wrap=True
+    )
     table.add_column(t("col_top_cups", lang=lang), style="bold magenta", no_wrap=True)
-    table.add_column(t("col_top_share", lang=lang), justify="right", style="bold yellow", no_wrap=True)
+    table.add_column(
+        t("col_top_share", lang=lang), justify="right", style="bold yellow", no_wrap=True
+    )
     table.add_column(t("col_distribution", lang=lang), justify="left", width=12, no_wrap=True)
 
     for month_data in filtered_months:
@@ -306,9 +340,9 @@ def render_monthly_overview(
 
 def render_detailed_monthly_breakdown(
     summary: CommunitySummary,
-    filter_cups: Optional[str] = None,
-    filter_year: Optional[int] = None,
-    lang: Optional[str] = None,
+    filter_cups: str | None = None,
+    filter_year: int | None = None,
+    lang: str | None = None,
 ) -> None:
     """Render full monthly CUPS breakdown tables, showing percentage shares for each period."""
     filtered_months = summary.monthly_summaries
@@ -334,8 +368,15 @@ def render_detailed_monthly_breakdown(
             header_style="bold cyan",
             show_footer=True,
         )
-        table.add_column(t("col_rank", lang=lang), justify="right", style="dim", width=2, no_wrap=True)
-        table.add_column(t("col_cups", lang=lang), style="bold white", footer=t("col_total", lang=lang), no_wrap=True)
+        table.add_column(
+            t("col_rank", lang=lang), justify="right", style="dim", width=2, no_wrap=True
+        )
+        table.add_column(
+            t("col_cups", lang=lang),
+            style="bold white",
+            footer=t("col_total", lang=lang),
+            no_wrap=True,
+        )
         table.add_column(
             t("col_consumption", lang=lang),
             justify="right",
@@ -374,8 +415,8 @@ def render_detailed_monthly_breakdown(
 def render_cups_trajectory(
     summary: CommunitySummary,
     target_cups: str,
-    filter_year: Optional[int] = None,
-    lang: Optional[str] = None,
+    filter_year: int | None = None,
+    lang: str | None = None,
 ) -> None:
     """Render a dedicated month-by-month trajectory table for a single selected CUPS."""
     filtered_months = summary.monthly_summaries
@@ -388,9 +429,19 @@ def render_cups_trajectory(
         header_style="bold cyan",
         show_footer=True,
     )
-    table.add_column(t("col_period", lang=lang), style="bold white", width=7, no_wrap=True, footer=t("col_total", lang=lang))
-    table.add_column(t("col_cups_kwh", lang=lang), justify="right", style="bold bright_cyan", no_wrap=True)
-    table.add_column(t("col_community_kwh", lang=lang), justify="right", style="dim white", no_wrap=True)
+    table.add_column(
+        t("col_period", lang=lang),
+        style="bold white",
+        width=7,
+        no_wrap=True,
+        footer=t("col_total", lang=lang),
+    )
+    table.add_column(
+        t("col_cups_kwh", lang=lang), justify="right", style="bold bright_cyan", no_wrap=True
+    )
+    table.add_column(
+        t("col_community_kwh", lang=lang), justify="right", style="dim white", no_wrap=True
+    )
     table.add_column(t("col_share", lang=lang), justify="right", style="bold yellow", no_wrap=True)
     table.add_column(t("col_distribution", lang=lang), justify="left", width=12, no_wrap=True)
 
@@ -410,7 +461,9 @@ def render_cups_trajectory(
                 make_share_bar(match.share_pct, width=12),
             )
 
-    overall_share = (total_cups_kwh / total_community_kwh * 100.0) if total_community_kwh > 0 else 0.0
+    overall_share = (
+        (total_cups_kwh / total_community_kwh * 100.0) if total_community_kwh > 0 else 0.0
+    )
     table.columns[1].footer = f"{format_kwh(total_cups_kwh)}"
     table.columns[2].footer = f"{format_kwh(total_community_kwh)}"
     table.columns[3].footer = f"{format_pct(overall_share)}"
@@ -419,7 +472,7 @@ def render_cups_trajectory(
     console.print()
 
 
-def render_key_insights(summary: CommunitySummary, lang: Optional[str] = None) -> None:
+def render_key_insights(summary: CommunitySummary, lang: str | None = None) -> None:
     """Render an analytical insights panel highlighting main findings."""
     top_overall = summary.overall_cups_shares[0] if summary.overall_cups_shares else None
     zero_consumers = [s.cups for s in summary.overall_cups_shares if s.consumption_kwh < 1.0]
@@ -470,7 +523,7 @@ def render_key_insights(summary: CommunitySummary, lang: Optional[str] = None) -
     console.print()
 
 
-def render_export_success(report_path: Path, lang: Optional[str] = None) -> None:
+def render_export_success(report_path: Path, lang: str | None = None) -> None:
     """Render a notification card when markdown report is saved to .output/."""
     msg = f"✔ {t('report_generated', lang=lang, path=str(report_path))}"
     console.print(

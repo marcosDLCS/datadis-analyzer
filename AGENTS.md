@@ -111,13 +111,24 @@ da summary --cups ES0021000000000001AA
 da summary --input-dir /path/to/input
 ```
 
-### Running Tests
+### Running Tests & Linting
 ```bash
 # Run all tests
 pytest -v
 
 # Run with test coverage or short output
 pytest -q
+
+# Run Ruff linter and code formatter
+ruff check .
+ruff format --check .
+
+# Auto-fix lint and reformat
+ruff check --fix .
+ruff format .
+
+# Verify git pre-commit hooks
+pre-commit run --all-files
 ```
 
 ---
@@ -148,6 +159,7 @@ pytest -q
 - **Error Handling:** Use custom domain exceptions from `src.ingestion.schema` (`DatadisError`, `DatadisValidationError`, `DatadisParseError`). Handle missing files, wrong headers, and corrupted rows gracefully without crashing.
 - **Terminal Aesthetics:** Keep Rich tables compact and responsive. Ensure all tables fit comfortably within standard **80-column terminals** without unwanted line-wrapping or column truncation (`no_wrap=True` for identifiers, numbers, and percentages).
 - **Testing:** Any new ingestion format, calculation logic, or CLI flag must include corresponding automated unit/integration tests in `tests/`. Always run `pytest` before finalizing changes.
+- **Linting & Formatting:** Ensure code adheres to Ruff rules. Always run `ruff check --fix .` and `ruff format .` before committing changes. Git pre-commit hooks will reject any commits with formatting or linting errors.
 - **Git & Commits:** Adhere strictly to the Conventional Commits specification documented in [CONTRIBUTING.md](CONTRIBUTING.md). Never include sensitive or real CUPS data in commits.
 
 ---

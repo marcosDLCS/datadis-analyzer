@@ -179,12 +179,23 @@ da summary --input-dir /path/to/custom_input
 
 ---
 
-## Running Automated Tests
+## Quality Assurance & Testing
 
-Run the complete test suite with `pytest`:
-
+### 1. Run Automated Tests
 ```bash
 pytest -v
+```
+
+### 2. Code Linting & Formatting (Ruff)
+```bash
+# Check code for lint errors and auto-fix
+ruff check --fix .
+
+# Format code (Python Prettier)
+ruff format .
+
+# Run all pre-commit hooks
+pre-commit run --all-files
 ```
 
 ---

@@ -18,7 +18,7 @@ class DatadisValidator:
         """
         for encoding in SUPPORTED_ENCODINGS:
             try:
-                with open(file_path, "r", encoding=encoding) as f:
+                with open(file_path, encoding=encoding) as f:
                     # Read a representative chunk to ensure encoding validity
                     f.read(8192)
                 return encoding
@@ -33,7 +33,7 @@ class DatadisValidator:
         Standard DATADIS exports use semicolon (';'). Falls back to Sniffer or comma.
         """
         try:
-            with open(file_path, "r", encoding=encoding, errors="replace") as f:
+            with open(file_path, encoding=encoding, errors="replace") as f:
                 sample_lines = [f.readline() for _ in range(5)]
                 sample = "".join(sample_lines)
 
@@ -82,7 +82,7 @@ class DatadisValidator:
         delimiter = cls.detect_delimiter(file_path, encoding)
 
         try:
-            with open(file_path, "r", encoding=encoding, errors="replace") as f:
+            with open(file_path, encoding=encoding, errors="replace") as f:
                 reader = csv.reader(f, delimiter=delimiter)
                 try:
                     raw_headers = next(reader)

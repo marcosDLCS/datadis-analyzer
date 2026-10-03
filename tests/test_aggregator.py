@@ -1,6 +1,7 @@
 """Tests for community energy data aggregation and share calculation logic."""
 
 from pathlib import Path
+
 import pytest
 
 from src.ingestion.loader import DatadisLoader

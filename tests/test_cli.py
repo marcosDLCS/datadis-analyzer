@@ -1,6 +1,7 @@
 """Tests for the Typer command-line interface entrypoints."""
 
 from pathlib import Path
+
 from typer.testing import CliRunner
 
 from src.cli import app
@@ -57,7 +58,9 @@ def test_cli_summary_view_monthly(sample_input_hierarchy: Path) -> None:
 def test_cli_summary_single_cups(sample_input_hierarchy: Path) -> None:
     """The 'da summary --cups <CUPS>' should display dedicated CUPS monthly trajectory."""
     target_cups = "ES0021000000000001AA"
-    result = runner.invoke(app, ["summary", "-i", str(sample_input_hierarchy), "--cups", target_cups])
+    result = runner.invoke(
+        app, ["summary", "-i", str(sample_input_hierarchy), "--cups", target_cups]
+    )
     assert result.exit_code == 0
     assert f"Monthly Trajectory for CUPS: {target_cups}" in result.stdout
     assert "Period" in result.stdout
@@ -66,14 +69,18 @@ def test_cli_summary_single_cups(sample_input_hierarchy: Path) -> None:
 
 def test_cli_summary_invalid_cups(sample_input_hierarchy: Path) -> None:
     """The 'da summary --cups INVALID' should exit with error code 1."""
-    result = runner.invoke(app, ["summary", "-i", str(sample_input_hierarchy), "--cups", "ES9999999999999999ZZ"])
+    result = runner.invoke(
+        app, ["summary", "-i", str(sample_input_hierarchy), "--cups", "ES9999999999999999ZZ"]
+    )
     assert result.exit_code == 1
     assert "not found in the loaded dataset" in result.stdout
 
 
 def test_cli_summary_invalid_view(sample_input_hierarchy: Path) -> None:
     """The 'da summary --view invalid' should exit with error code 1."""
-    result = runner.invoke(app, ["summary", "-i", str(sample_input_hierarchy), "--view", "invalid_mode"])
+    result = runner.invoke(
+        app, ["summary", "-i", str(sample_input_hierarchy), "--view", "invalid_mode"]
+    )
     assert result.exit_code == 1
     assert "Invalid view mode" in result.stdout
 

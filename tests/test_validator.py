@@ -1,6 +1,7 @@
 """Tests for DATADIS format and schema validator."""
 
 from pathlib import Path
+
 from src.ingestion.validator import DatadisValidator
 
 
@@ -18,8 +19,7 @@ def test_validator_detects_comma_delimiter(tmp_path: Path) -> None:
     """Validator should correctly identify comma delimiter when present."""
     csv_file = tmp_path / "comma.csv"
     csv_file.write_text(
-        'cups,fecha,hora,consumo_kWh\n'
-        '"ES0021000000000001AA","2025/01/01","01:00","1.5"\n',
+        'cups,fecha,hora,consumo_kWh\n"ES0021000000000001AA","2025/01/01","01:00","1.5"\n',
         encoding="utf-8",
     )
     result = DatadisValidator.validate_file(csv_file)
@@ -62,7 +62,7 @@ def test_validator_handles_latin1_encoding(tmp_path: Path) -> None:
     """Validator should detect and read ISO-8859-1 / Latin-1 encoded CSVs."""
     csv_file = tmp_path / "latin1.csv"
     content = (
-        'cups;fecha;hora;consumo_kWh;metodoObtención\n'
+        "cups;fecha;hora;consumo_kWh;metodoObtención\n"
         '"ES0021000000000001AA";"2025/01/01";"01:00";"1,500";"Real"\n'
     )
     csv_file.write_bytes(content.encode("latin-1"))

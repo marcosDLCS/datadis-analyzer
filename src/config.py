@@ -3,7 +3,7 @@
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final, Optional
+from typing import Final
 
 # Default paths
 DEFAULT_INPUT_DIR: Final[Path] = Path(".input")
@@ -83,10 +83,12 @@ def normalize_language_code(lang_raw: str) -> str:
         return "en"
     if clean in ("es", "spanish", "español", "espanol"):
         return "es"
-    raise ValueError(f"Unsupported language '{lang_raw}'. Supported options: 'en' (English), 'es' (Spanish).")
+    raise ValueError(
+        f"Unsupported language '{lang_raw}'. Supported options: 'en' (English), 'es' (Spanish)."
+    )
 
 
-def load_config(path: Optional[Path] = None) -> AppConfig:
+def load_config(path: Path | None = None) -> AppConfig:
     """Load configuration from disk, returning default settings if the file does not exist."""
     target_path = path or CONFIG_FILE_PATH
     if not target_path.exists():
@@ -109,14 +111,14 @@ def load_config(path: Optional[Path] = None) -> AppConfig:
         return AppConfig()
 
 
-def save_config(config: AppConfig, path: Optional[Path] = None) -> None:
+def save_config(config: AppConfig, path: Path | None = None) -> None:
     """Persist application configuration to disk as JSON."""
     target_path = path or CONFIG_FILE_PATH
     target_path.parent.mkdir(parents=True, exist_ok=True)
     target_path.write_text(json.dumps(asdict(config), indent=2), encoding="utf-8")
 
 
-def set_language(language: str, path: Optional[Path] = None) -> str:
+def set_language(language: str, path: Path | None = None) -> str:
     """Update and persist the active language setting.
 
     Returns:
@@ -129,14 +131,14 @@ def set_language(language: str, path: Optional[Path] = None) -> str:
     return code
 
 
-def get_language(path: Optional[Path] = None) -> str:
+def get_language(path: Path | None = None) -> str:
     """Retrieve the currently configured language code ('en' or 'es')."""
     return load_config(path).language
 
 
 def ensure_directories(
-    config: Optional[AppConfig] = None,
-    config_path: Optional[Path] = None,
+    config: AppConfig | None = None,
+    config_path: Path | None = None,
 ) -> tuple[Path, Path]:
     """Ensure that the input and output directories exist on disk, creating them if necessary.
 

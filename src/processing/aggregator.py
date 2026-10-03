@@ -1,7 +1,5 @@
 """Core data processing and aggregation logic for DATADIS energy consumption."""
 
-from typing import Optional
-
 import pandas as pd
 
 from src.config import (
@@ -42,10 +40,12 @@ class DataAggregator:
         required = [COL_CUPS, COL_DATE, COL_YEAR, COL_MONTH, COL_CONSUMPTION_KWH]
         missing = [col for col in required if col not in df.columns]
         if missing:
-            raise DatadisError(f"DataFrame missing required aggregation columns: {', '.join(missing)}")
+            raise DatadisError(
+                f"DataFrame missing required aggregation columns: {', '.join(missing)}"
+            )
 
         total_community_kwh = float(df[COL_CONSUMPTION_KWH].sum())
-        total_readings = int(len(df))
+        total_readings = len(df)
         unique_cups = sorted(df[COL_CUPS].unique().tolist())
         date_min = str(df[COL_DATE].min().strftime("%Y-%m-%d"))
         date_max = str(df[COL_DATE].max().strftime("%Y-%m-%d"))
@@ -186,9 +186,7 @@ class DataAggregator:
         return shares
 
     @classmethod
-    def build_monthly_pivot(
-        cls, df: pd.DataFrame, year: Optional[int] = None
-    ) -> pd.DataFrame:
+    def build_monthly_pivot(cls, df: pd.DataFrame, year: int | None = None) -> pd.DataFrame:
         """Create a matrix pivot table of CUPS consumption per month.
 
         Args:

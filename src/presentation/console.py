@@ -44,7 +44,7 @@ def make_share_bar(pct: float, width: int = 16) -> str:
         Colorized string with filled and empty blocks.
     """
     pct_clamped = max(0.0, min(100.0, pct))
-    filled_len = int(round((pct_clamped / 100.0) * width))
+    filled_len = round((pct_clamped / 100.0) * width)
     empty_len = width - filled_len
 
     if pct >= 50.0:

@@ -1,7 +1,6 @@
 """Command-line interface entry point for DATADIS Analyzer."""
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -47,7 +46,7 @@ def default_callback(ctx: typer.Context) -> None:
 
 @app.command(name="help")
 def help_cmd(
-    lang: Optional[str] = typer.Option(
+    lang: str | None = typer.Option(
         None,
         "--lang",
         "-l",
@@ -61,7 +60,7 @@ def help_cmd(
 
 @app.command(name="init")
 def init_cmd(
-    language: Optional[str] = typer.Option(
+    language: str | None = typer.Option(
         None,
         "--language",
         "-l",
@@ -115,7 +114,7 @@ def summary_cmd(
         dir_okay=True,
         writable=True,
     ),
-    year: Optional[int] = typer.Option(
+    year: int | None = typer.Option(
         None,
         "--year",
         "-y",
@@ -127,13 +126,13 @@ def summary_cmd(
         "-v",
         help="Output view mode: 'all' (annual + monthly summary), 'annual', or 'monthly' (full monthly CUPS breakdown).",
     ),
-    cups: Optional[str] = typer.Option(
+    cups: str | None = typer.Option(
         None,
         "--cups",
         "-c",
         help="Filter display to a single CUPS code.",
     ),
-    lang: Optional[str] = typer.Option(
+    lang: str | None = typer.Option(
         None,
         "--lang",
         "-l",
@@ -188,12 +187,10 @@ def summary_cmd(
             if effective_lang == "es"
             else f"CUPS '{cups}' was not found in the loaded dataset."
         )
-        avail_msg = (
-            "CUPS disponibles:"
-            if effective_lang == "es"
-            else "Available CUPS in dataset:"
+        avail_msg = "CUPS disponibles:" if effective_lang == "es" else "Available CUPS in dataset:"
+        console.print(
+            f"\n[bold red]Error:[/bold red] {not_found_msg}\n[dim]{avail_msg}[/dim] {', '.join(summary.cups_list)}\n"
         )
-        console.print(f"\n[bold red]Error:[/bold red] {not_found_msg}\n[dim]{avail_msg}[/dim] {', '.join(summary.cups_list)}\n")
         raise typer.Exit(code=1)
 
     # 1. Validation warnings (if any files were skipped or corrupted)
@@ -205,7 +202,9 @@ def summary_cmd(
 
     # 3. Dedicated CUPS trajectory if single CUPS is filtered
     if cups:
-        render_cups_trajectory(summary=summary, target_cups=cups, filter_year=year, lang=effective_lang)
+        render_cups_trajectory(
+            summary=summary, target_cups=cups, filter_year=year, lang=effective_lang
+        )
         render_key_insights(summary, lang=effective_lang)
     else:
         # 4. Annual consumption and CUPS shares

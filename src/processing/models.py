@@ -1,7 +1,6 @@
 """Domain models and data structures for aggregated DATADIS energy consumption metrics."""
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass

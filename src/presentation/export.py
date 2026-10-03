@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from src.config import DEFAULT_OUTPUT_DIR
 from src.i18n import t
@@ -13,7 +12,7 @@ from src.processing.models import CommunitySummary
 def _make_ascii_bar(pct: float, width: int = 12) -> str:
     """Create a plain text block bar suitable for standard Markdown rendering."""
     pct_clamped = max(0.0, min(100.0, pct))
-    filled_len = int(round((pct_clamped / 100.0) * width))
+    filled_len = round((pct_clamped / 100.0) * width)
     empty_len = width - filled_len
     return "`" + "█" * filled_len + "░" * empty_len + "`"
 
@@ -21,9 +20,9 @@ def _make_ascii_bar(pct: float, width: int = 12) -> str:
 def export_markdown_summary(
     summary: CommunitySummary,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
-    lang: Optional[str] = None,
-    year_filter: Optional[int] = None,
-    cups_filter: Optional[str] = None,
+    lang: str | None = None,
+    year_filter: int | None = None,
+    cups_filter: str | None = None,
     view_mode: str = "all",
 ) -> Path:
     """Generate and persist a complete community summary report in Markdown format.
@@ -68,11 +67,21 @@ def export_markdown_summary(
     lines.append("")
     lines.append("| Metric | Value |")
     lines.append("| :--- | :--- |")
-    lines.append(f"| {t('total_community_consumption', lang=lang).rstrip(':')} | **{format_kwh(summary.total_community_kwh)}** |")
-    lines.append(f"| {t('active_cups_meters', lang=lang).rstrip(':')} | {summary.unique_cups_count} |")
-    lines.append(f"| {t('date_range', lang=lang).rstrip(':')} | {summary.date_min} to {summary.date_max} |")
-    lines.append(f"| {t('peak_month', lang=lang).rstrip(':')} | {summary.peak_month_label} ({format_kwh(summary.peak_month_kwh)}) |")
-    lines.append(f"| {t('total_hourly_readings', lang=lang).rstrip(':')} | {summary.total_readings:,} |")
+    lines.append(
+        f"| {t('total_community_consumption', lang=lang).rstrip(':')} | **{format_kwh(summary.total_community_kwh)}** |"
+    )
+    lines.append(
+        f"| {t('active_cups_meters', lang=lang).rstrip(':')} | {summary.unique_cups_count} |"
+    )
+    lines.append(
+        f"| {t('date_range', lang=lang).rstrip(':')} | {summary.date_min} to {summary.date_max} |"
+    )
+    lines.append(
+        f"| {t('peak_month', lang=lang).rstrip(':')} | {summary.peak_month_label} ({format_kwh(summary.peak_month_kwh)}) |"
+    )
+    lines.append(
+        f"| {t('total_hourly_readings', lang=lang).rstrip(':')} | {summary.total_readings:,} |"
+    )
     lines.append("")
 
     # Section 2: Annual Breakdown
@@ -89,9 +98,13 @@ def export_markdown_summary(
         for year in years_to_display:
             annual = summary.annual_summaries[year]
             lines.append(f"### {t('annual_summary_title', lang=lang, year=year)}")
-            lines.append(f"*{t('community_total_label', lang=lang, total=format_kwh(annual.community_total_kwh))}*")
+            lines.append(
+                f"*{t('community_total_label', lang=lang, total=format_kwh(annual.community_total_kwh))}*"
+            )
             lines.append("")
-            lines.append(f"| {t('col_rank', lang=lang)} | {t('col_cups', lang=lang)} | {t('col_consumption', lang=lang)} | {t('col_share', lang=lang)} | {t('col_distribution', lang=lang)} |")
+            lines.append(
+                f"| {t('col_rank', lang=lang)} | {t('col_cups', lang=lang)} | {t('col_consumption', lang=lang)} | {t('col_share', lang=lang)} | {t('col_distribution', lang=lang)} |"
+            )
             lines.append("| :---: | :--- | :---: | :---: | :--- |")
 
             for idx, item in enumerate(annual.cups_shares, start=1):
@@ -109,7 +122,9 @@ def export_markdown_summary(
     if view_mode in ("all", "monthly") and not cups_filter:
         lines.append(t("md_section_timeline", lang=lang))
         lines.append("")
-        lines.append(f"| {t('col_period', lang=lang)} | {t('col_community_total', lang=lang)} | {t('col_top_cups', lang=lang)} | {t('col_top_share', lang=lang)} | {t('col_distribution', lang=lang)} |")
+        lines.append(
+            f"| {t('col_period', lang=lang)} | {t('col_community_total', lang=lang)} | {t('col_top_cups', lang=lang)} | {t('col_top_share', lang=lang)} | {t('col_distribution', lang=lang)} |"
+        )
         lines.append("| :---: | :---: | :--- | :---: | :--- |")
 
         filtered_months = summary.monthly_summaries
@@ -134,9 +149,13 @@ def export_markdown_summary(
 
         for m in filtered_months:
             lines.append(f"### {t('period_title', lang=lang, period=m.period_label)}")
-            lines.append(f"*{t('community_total_label', lang=lang, total=format_kwh(m.community_total_kwh))}*")
+            lines.append(
+                f"*{t('community_total_label', lang=lang, total=format_kwh(m.community_total_kwh))}*"
+            )
             lines.append("")
-            lines.append(f"| {t('col_rank', lang=lang)} | {t('col_cups', lang=lang)} | {t('col_consumption', lang=lang)} | {t('col_share', lang=lang)} | {t('col_distribution', lang=lang)} |")
+            lines.append(
+                f"| {t('col_rank', lang=lang)} | {t('col_cups', lang=lang)} | {t('col_consumption', lang=lang)} | {t('col_share', lang=lang)} | {t('col_distribution', lang=lang)} |"
+            )
             lines.append("| :---: | :--- | :---: | :---: | :--- |")
 
             for idx, item in enumerate(m.cups_shares, start=1):
@@ -154,7 +173,9 @@ def export_markdown_summary(
     if cups_filter:
         lines.append(f"## {t('cups_trajectory_title', lang=lang, cups=cups_filter)}")
         lines.append("")
-        lines.append(f"| {t('col_period', lang=lang)} | {t('col_cups_kwh', lang=lang)} | {t('col_community_kwh', lang=lang)} | {t('col_share', lang=lang)} | {t('col_distribution', lang=lang)} |")
+        lines.append(
+            f"| {t('col_period', lang=lang)} | {t('col_cups_kwh', lang=lang)} | {t('col_community_kwh', lang=lang)} | {t('col_share', lang=lang)} | {t('col_distribution', lang=lang)} |"
+        )
         lines.append("| :---: | :---: | :---: | :---: | :--- |")
 
         total_c = 0.0
@@ -173,7 +194,9 @@ def export_markdown_summary(
                 )
 
         ov_share = (total_c / total_comm * 100.0) if total_comm > 0 else 0.0
-        lines.append(f"| **{t('col_total', lang=lang)}** | **{format_kwh(total_c)}** | **{format_kwh(total_comm)}** | **{format_pct(ov_share)}** | |")
+        lines.append(
+            f"| **{t('col_total', lang=lang)}** | **{format_kwh(total_c)}** | **{format_kwh(total_comm)}** | **{format_pct(ov_share)}** | |"
+        )
         lines.append("")
 
     # Section 5: Key Observations
