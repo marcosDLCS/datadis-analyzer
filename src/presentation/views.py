@@ -70,6 +70,10 @@ def render_help(lang: str | None = None) -> None:
         "da help",
         t("cmd_help_desc", lang=lang),
     )
+    cmd_table.add_row(
+        "da version",
+        t("cmd_version_desc", lang=lang),
+    )
     console.print(cmd_table)
     console.print()
 

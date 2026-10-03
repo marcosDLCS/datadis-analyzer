@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-__version__ = "2026.10.002"
+__version__ = "2026.10.003"
 
 VERSION_PATTERN = re.compile(r"^(\d{4})\.(\d{2})\.(\d{3})$")
 
@@ -115,7 +115,16 @@ def bump_version_files(
     pyproject = root / "pyproject.toml"
     version_file = root / "src" / "version.py"
 
-    current = get_version()
+    # Read current version from file to work correctly in isolated environments.
+    current: str | None = None
+    if version_file.is_file():
+        ver_content = version_file.read_text(encoding="utf-8")
+        ver_match = re.search(r'__version__\s*=\s*"([^"]+)"', ver_content)
+        if ver_match:
+            current = ver_match.group(1)
+    if current is None:
+        current = get_version()
+
     new_version = generate_next_version(current, target_date=target_date)
 
     if version_file.is_file():

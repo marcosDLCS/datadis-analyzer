@@ -23,6 +23,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "cmd_init_desc": "Configure the application language (English or Spanish) and persistent preferences.",
         "cmd_cleanup_desc": "Remove generated reports and clear files from the .output directory.",
         "cmd_help_desc": "Display this comprehensive command reference, input structure guidelines, and examples.",
+        "cmd_version_desc": "Display the active CalVer version (YYYY.MM.NNN) and exit.",
         # Options
         "options_title": "OPTIONS FOR 'da summary'",
         "opt_name": "Option",
@@ -53,6 +54,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "$ da summary --year 2025            # Inspect year 2025 specifically\n"
             "$ da summary --view monthly         # Show full CUPS percentage shares for each month\n"
             "$ da summary --cups ES0021000000000001AA # Track consumption for one specific meter\n"
+            "$ da version                        # Display active CalVer version and exit\n"
         ),
         # Community overview card
         "overview_card_title": "🏢 Residential Community Energy Overview",
@@ -194,6 +196,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "cmd_init_desc": "Configurar el idioma de salida de la aplicación (inglés o español) y preferencias persistentes.",
         "cmd_cleanup_desc": "Eliminar los informes generados y limpiar los archivos de la carpeta .output.",
         "cmd_help_desc": "Mostrar esta referencia de comandos, guía de estructura de datos y ejemplos.",
+        "cmd_version_desc": "Mostrar la versión CalVer activa (AAAA.MM.NNN) y salir.",
         # Options
         "options_title": "OPCIONES PARA 'da summary'",
         "opt_name": "Opción",
@@ -224,6 +227,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "$ da summary --year 2025            # Inspeccionar específicamente el año 2025\n"
             "$ da summary --view monthly         # Mostrar porcentajes completos de cada CUPS por mes\n"
             "$ da summary --cups ES0021000000000001AA # Seguir el consumo de un contador específico\n"
+            "$ da version                        # Mostrar la versión CalVer activa y salir\n"
         ),
         # Community overview card
         "overview_card_title": "🏢 Resumen Energético de la Comunidad de Propietarios",

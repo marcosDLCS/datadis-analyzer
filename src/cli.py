@@ -53,22 +53,16 @@ app = typer.Typer(
 
 
 @app.callback(invoke_without_command=True)
-def default_callback(
-    ctx: typer.Context,
-    version: bool = typer.Option(
-        False,
-        "--version",
-        "-V",
-        help="Show DATADIS Analyzer version and exit.",
-        is_eager=True,
-    ),
-) -> None:
+def default_callback(ctx: typer.Context) -> None:
     """Default entrypoint. Renders custom formatted help if no subcommand is passed."""
-    if version:
-        console.print(f"DATADIS Analyzer (da) [bold cyan]v{get_version()}[/bold cyan]")
-        raise typer.Exit(code=0)
     if ctx.invoked_subcommand is None:
         render_help(lang=get_language())
+
+
+@app.command(name="version")
+def version_cmd() -> None:
+    """Show DATADIS Analyzer version and exit."""
+    console.print(f"DATADIS Analyzer (da) [bold cyan]v{get_version()}[/bold cyan]")
 
 
 def verify_initialized(lang: str | None = None) -> None:

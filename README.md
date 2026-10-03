@@ -155,10 +155,9 @@ da init --language es   # Set language to Spanish and mark initialized
 da init -l en           # Set language to English and mark initialized
 ```
 
-### 🏷️ Version Display (`da --version`)
+### 🏷️ Version Display (`da version`)
 ```bash
-da --version            # Display active CalVer version (e.g., 2026.10.001)
-da -V                   # Short version flag
+da version              # Display active CalVer version (e.g., 2026.10.001)
 ```
 
 ### 📖 Help & Manual (`da help`)

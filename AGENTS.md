@@ -91,7 +91,7 @@ da summary --cups <CUPS>  # Inspect specific CUPS trajectory
 da compare [-y YYYY ...]  # Multi-year consumption comparison, trends & export
 da cleanup [-f]           # Clear generated reports from .output/
 da help                   # Interactive manual
-da --version / da -V      # Display active application version
+da version              # Display active application version
 ```
 
 ### Testing & Quality Checks

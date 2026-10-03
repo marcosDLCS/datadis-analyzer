@@ -100,16 +100,12 @@ def test_bump_version_in_isolated_dir(tmp_path: Path) -> None:
     assert '__version__ = "2026.10.002"' in ver_py.read_text(encoding="utf-8")
 
 
-def test_cli_version_flag() -> None:
-    """The 'da --version' and 'da -V' flags display the CalVer version and exit 0."""
-    result_long = runner.invoke(app, ["--version"])
-    assert result_long.exit_code == 0
-    assert get_version() in result_long.stdout
-    assert "DATADIS Analyzer (da)" in result_long.stdout
-
-    result_short = runner.invoke(app, ["-V"])
-    assert result_short.exit_code == 0
-    assert get_version() in result_short.stdout
+def test_cli_version_cmd() -> None:
+    """The 'da version' subcommand displays the CalVer version and exits 0."""
+    result = runner.invoke(app, ["version"])
+    assert result.exit_code == 0
+    assert get_version() in result.stdout
+    assert "DATADIS Analyzer (da)" in result.stdout
 
 
 def test_cli_help_displays_version() -> None:
