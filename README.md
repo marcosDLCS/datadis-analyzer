@@ -21,6 +21,9 @@ datadis-analyzer/
 ├── pyproject.toml              # Build metadata, dependencies, and CLI script entrypoint (`da`)
 ├── requirements.txt            # Core and test dependency manifest
 ├── README.md                   # Project documentation
+├── AGENTS.md                   # Technical reference and agent instructions
+├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits specification
+├── .da_config.json             # Persistent application configuration
 ├── .input/                     # Annualized DATADIS CSV export directories
 │   ├── 2025/
 │   └── 2026/
@@ -183,3 +186,11 @@ Run the complete test suite with `pytest`:
 ```bash
 pytest -v
 ```
+
+---
+
+## Contributing
+
+Contributions are warmly welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our coding standards, Conventional Commits specification, strict privacy & data anonymization policy, and pull request workflow.
+
+For AI agents and automated development instructions, see [AGENTS.md](AGENTS.md).

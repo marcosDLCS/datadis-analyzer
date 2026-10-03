@@ -29,6 +29,7 @@ datadis-analyzer/
 ├── requirements.txt            # Core and test dependency manifest
 ├── README.md                   # User guide and project overview
 ├── AGENTS.md                   # Agent and developer instructions
+├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits specification
 ├── .da_config.json             # Persistent application configuration (language, paths)
 ├── .input/                     # Annualized raw CSV files (.input/<year>/*.csv)
 ├── .output/                    # Target directory for generated reports/exports
@@ -147,3 +148,11 @@ pytest -q
 - **Error Handling:** Use custom domain exceptions from `src.ingestion.schema` (`DatadisError`, `DatadisValidationError`, `DatadisParseError`). Handle missing files, wrong headers, and corrupted rows gracefully without crashing.
 - **Terminal Aesthetics:** Keep Rich tables compact and responsive. Ensure all tables fit comfortably within standard **80-column terminals** without unwanted line-wrapping or column truncation (`no_wrap=True` for identifiers, numbers, and percentages).
 - **Testing:** Any new ingestion format, calculation logic, or CLI flag must include corresponding automated unit/integration tests in `tests/`. Always run `pytest` before finalizing changes.
+- **Git & Commits:** Adhere strictly to the Conventional Commits specification documented in [CONTRIBUTING.md](CONTRIBUTING.md). Never include sensitive or real CUPS data in commits.
+
+---
+
+## 7. Related Documentation
+
+- [README.md](README.md) — User setup, command reference, and visual overview.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Open-source contribution guidelines, coding standards, and PR workflows.
