@@ -8,6 +8,7 @@ from src.config import DEFAULT_OUTPUT_DIR
 from src.i18n import get_month_name, t
 from src.presentation.console import format_kwh, format_pct
 from src.processing.models import CommunitySummary, ComparisonSummary
+from src.version import get_version
 
 
 def _make_ascii_bar(pct: float, width: int = 12) -> str:
@@ -63,7 +64,9 @@ def export_markdown_summary(
     # Title & Metadata
     lines.append(t("md_doc_title", lang=lang))
     lines.append("")
-    lines.append(f"> {t('md_generated_at', lang=lang, datetime=now.strftime('%Y-%m-%d %H:%M:%S'))}")
+    lines.append(
+        f"> {t('md_generated_at', lang=lang, datetime=now.strftime('%Y-%m-%d %H:%M:%S'))} | **{t('col_version', lang=lang)}:** {get_version()}"
+    )
     lines.append("")
 
     # Section 1: Executive Overview
@@ -71,6 +74,7 @@ def export_markdown_summary(
     lines.append("")
     lines.append("| Metric | Value |")
     lines.append("| :--- | :--- |")
+    lines.append(f"| {t('app_version_label', lang=lang)} | `{get_version()}` |")
     lines.append(
         f"| {t('total_community_consumption', lang=lang).rstrip(':')} | **{format_kwh(summary.total_community_kwh)}** |"
     )
@@ -288,7 +292,9 @@ def export_comparison_markdown(
     years_title = " vs ".join(map(str, comparison.years))
     lines.append(t("md_compare_title", lang=lang, years=years_title))
     lines.append("")
-    lines.append(f"> {t('md_generated_at', lang=lang, datetime=now.strftime('%Y-%m-%d %H:%M:%S'))}")
+    lines.append(
+        f"> {t('md_generated_at', lang=lang, datetime=now.strftime('%Y-%m-%d %H:%M:%S'))} | **{t('col_version', lang=lang)}:** {get_version()}"
+    )
     lines.append("")
 
     # Section 1: Executive Overview
@@ -296,6 +302,7 @@ def export_comparison_markdown(
     lines.append("")
     lines.append("| Metric | Value |")
     lines.append("| :--- | :--- |")
+    lines.append(f"| {t('app_version_label', lang=lang)} | `{get_version()}` |")
     lines.append(
         f"| {t('compare_years_label', lang=lang).rstrip(':')} | **{', '.join(map(str, comparison.years))}** |"
     )

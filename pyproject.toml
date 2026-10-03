@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "datadis-analyzer"
-version = "0.1.0"
+version = "2026.10.002"
 description = "Modular CLI tool to analyze Spanish DATADIS energy consumption data for residential communities"
 readme = "README.md"
 requires-python = ">=3.11"

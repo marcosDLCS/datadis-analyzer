@@ -12,6 +12,7 @@ from src.presentation.views import (
     render_init_success,
     render_key_insights,
     render_monthly_overview,
+    render_not_initialized_error,
     render_validation_issues,
 )
 
@@ -30,5 +31,6 @@ __all__ = [
     "render_init_success",
     "render_key_insights",
     "render_monthly_overview",
+    "render_not_initialized_error",
     "render_validation_issues",
 ]

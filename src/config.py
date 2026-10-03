@@ -65,11 +65,13 @@ class AppConfig:
         language: Active output language ('en' for English, 'es' for Spanish).
         input_dir: Default input folder path.
         output_dir: Default output folder path for markdown reports.
+        initialized_at: ISO timestamp recording when 'da init' was successfully run.
     """
 
     language: str = "en"
     input_dir: str = ".input"
     output_dir: str = ".output"
+    initialized_at: str | None = None
 
 
 def normalize_language_code(lang_raw: str) -> str:
@@ -106,16 +108,42 @@ def load_config(path: Path | None = None) -> AppConfig:
             language=normalized_lang,
             input_dir=data.get("input_dir", ".input"),
             output_dir=data.get("output_dir", ".output"),
+            initialized_at=data.get("initialized_at"),
         )
     except Exception:
         return AppConfig()
+
+
+def is_initialized(path: Path | None = None) -> bool:
+    """Check whether the workspace configuration has been initialized via 'da init'."""
+    target_path = path or CONFIG_FILE_PATH
+    if not target_path.exists():
+        return False
+    cfg = load_config(target_path)
+    return bool(cfg.initialized_at)
+
+
+def mark_initialized(path: Path | None = None, timestamp: str | None = None) -> str:
+    """Record and persist an initialization timestamp in the application settings.
+
+    Returns:
+        The persisted ISO datetime string.
+    """
+    from datetime import datetime
+
+    target_path = path or CONFIG_FILE_PATH
+    cfg = load_config(target_path)
+    ts = timestamp or datetime.now().isoformat()
+    cfg.initialized_at = ts
+    save_config(cfg, target_path)
+    return ts
 
 
 def save_config(config: AppConfig, path: Path | None = None) -> None:
     """Persist application configuration to disk as JSON."""
     target_path = path or CONFIG_FILE_PATH
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    target_path.write_text(json.dumps(asdict(config), indent=2), encoding="utf-8")
+    target_path.write_text(json.dumps(asdict(config), indent=2) + "\n", encoding="utf-8")
 
 
 def set_language(language: str, path: Path | None = None) -> str:

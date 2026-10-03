@@ -18,9 +18,10 @@ flowchart TD
     A["💡 Issue / Feature Idea"] --> B["🍴 Create Branch\n(feat/... or fix/...)"]
     B --> C["💻 Implementation\n(PEP 8, strict typing)"]
     C --> D["🧪 Automated Tests\n(pytest -v, 100% pass)"]
-    D --> E["🧹 Pre-Commit Verification\n(Ruff lint & format)"]
-    E --> F["📝 Conventional Commit\n(<type>(<scope>): <desc>)"]
-    F --> G["🚀 Open Pull Request"]
+    D --> E["🏷️ Bump Version\n(python -m src.version bump)"]
+    E --> F["🧹 Pre-Commit Verification\n(Ruff & CalVer hook)"]
+    F --> G["📝 Conventional Commit\n(<type>(<scope>): <desc>)"]
+    G --> H["🚀 Open Pull Request"]
 ```
 
 ---
@@ -29,10 +30,11 @@ flowchart TD
 1. [🛡️ Privacy & Anonymization Policy](#1-privacy--anonymization-policy)
 2. [🛠️ Development Environment Setup](#2-development-environment-setup)
 3. [📝 Conventional Commits Specification](#3-conventional-commits-specification)
-4. [🎯 Coding Standards & Tooling](#4-coding-standards--tooling)
-5. [🧪 Testing Guidelines](#5-testing-guidelines)
-6. [🚀 Pull Request Workflow & Checklist](#6-pull-request-workflow--checklist)
-7. [📚 Related Documentation](#7-related-documentation)
+4. [🏷️ CalVer Versioning Convention](#4-calver-versioning-convention)
+5. [🎯 Coding Standards & Tooling](#5-coding-standards--tooling)
+6. [🧪 Testing Guidelines](#6-testing-guidelines)
+7. [🚀 Pull Request Workflow & Checklist](#7-pull-request-workflow--checklist)
+8. [📚 Related Documentation](#8-related-documentation)
 
 ---
 
@@ -105,11 +107,39 @@ All commit messages must adhere to the [Conventional Commits v1.0.0](https://www
 | `ci` | Continuous integration workflows | `ci: add matrix test workflow` |
 | `chore` | Maintenance tasks | `chore: update gitignore patterns` |
 
-**Recognized scopes:** `cli`, `config`, `core`, `i18n`, `loader`, `validator`, `aggregator`, `views`, `export`, `tooling`.
+**Recognized scopes:** `cli`, `config`, `core`, `i18n`, `loader`, `validator`, `aggregator`, `views`, `export`, `version`, `tooling`.
 
 ---
 
-## 4. 🎯 Coding Standards & Tooling
+## 4. 🏷️ CalVer Versioning Convention
+
+DATADIS Analyzer uses Calendar Versioning (**CalVer**) with the following pattern:
+
+$$\text{Format:} \quad \mathbf{\langle \text{year} \rangle . \langle \text{month} \rangle . \langle \text{incremental sequence (3 digits)} \rangle} \quad \text{e.g., } \mathbf{2026.10.001}$$
+
+### Invariants:
+1. **Every commit must change the version:** Each commit must produce a new version string across `src/version.py` and `pyproject.toml`.
+2. **Monthly reset:** If a commit is made in a new month or year, the sequence resets to `001` (e.g. `2026.11.001`).
+3. **Visibility:** The version must appear in the console banner, during `da init`, and in all generated markdown reports.
+
+### Version Management Commands:
+```bash
+# Check current version
+python -m src.version get
+
+# Bump version to the next incremental CalVer string
+python -m src.version bump
+
+# Validate consistency between src/version.py and pyproject.toml
+python -m src.version check
+```
+
+> [!TIP]
+> The git pre-commit hook automatically verifies that your staged commit includes a valid version bump. If you forget to bump before committing, the pre-commit hook will auto-bump and stage the version files for you.
+
+---
+
+## 5. 🎯 Coding Standards & Tooling
 
 - **🌐 Language & Localization:** Write all code, docstrings, comments, and commit messages in English. All CLI and report text must use `t("key", lang=...)` in [src/i18n.py](src/i18n.py) with translations for both English (`en`) and Spanish (`es`).
 - **🏷️ Strict Typing:** Annotate all function signatures with modern type hints (e.g., `int | None`). Avoid bare `Any`.
@@ -123,7 +153,7 @@ All commit messages must adhere to the [Conventional Commits v1.0.0](https://www
 
 ---
 
-## 5. 🧪 Testing Guidelines
+## 6. 🧪 Testing Guidelines
 
 All submissions require automated test coverage.
 
@@ -135,16 +165,18 @@ pytest tests/test_aggregator.py -v   # Single test file
 
 ### Core Invariants
 1. **The 100.00% Share Invariant:** For any period, the sum of `share_pct` across all community supply points must equal `100.00%`.
-2. **Test Isolation:** Tests must not modify user configuration or production directories. Use `tmp_path` and `reset_default_config` fixtures.
+2. **Mandatory Initialization:** `da init` must be run before executing operational commands.
+3. **Test Isolation:** Tests must not modify user configuration or production directories. Use `tmp_path` and `reset_default_config` fixtures.
 
 ---
 
-## 6. 🚀 Pull Request Workflow & Checklist
+## 7. 🚀 Pull Request Workflow & Checklist
 
 1. **Branch Naming:** Create a feature or bugfix branch (`feat/<name>` or `fix/<name>`).
-2. **Local Validation:** Ensure tests and pre-commit checks pass prior to opening a PR:
+2. **Local Validation:** Ensure tests, version checks, and pre-commit checks pass prior to opening a PR:
    ```bash
    pytest -v
+   python -m src.version check
    ruff check .
    ruff format --check .
    pre-commit run --all-files
@@ -152,6 +184,7 @@ pytest tests/test_aggregator.py -v   # Single test file
 3. **Atomic Commits:** Follow the Conventional Commits specification.
 
 ### PR Checklist
+- [ ] Version bumped following CalVer format (`python -m src.version bump`).
 - [ ] Commits adhere to Conventional Commits format (`<type>(<scope>): <desc>`).
 - [ ] All automated tests pass (`pytest -v`).
 - [ ] Ruff linting and formatting checks succeed.
@@ -163,7 +196,7 @@ pytest tests/test_aggregator.py -v   # Single test file
 
 ---
 
-## 7. 📚 Related Documentation
+## 8. 📚 Related Documentation
 
 - 📖 [README.md](README.md) — User setup, command options, and architecture overview.
 - 🤖 [AGENTS.md](AGENTS.md) — Technical instructions and architectural guidelines for AI agents and developers.

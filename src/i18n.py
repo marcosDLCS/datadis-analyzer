@@ -109,9 +109,14 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "col_issue": "Issue Details",
         # da init messages
         "init_title": "⚙️ Configuration Initialized",
+        "init_version_info": "DATADIS Analyzer Version: [bold cyan]{version}[/bold cyan]",
         "init_language_set": "Output language successfully configured to: [bold green]English[/bold green].",
         "init_folders_created": "Workspace directories initialized: [cyan]{input_dir}/[/cyan] and [cyan]{output_dir}/[/cyan].",
         "init_persistence_note": "This preference is persisted in [cyan]{path}[/cyan] and will apply to all subsequent commands.",
+        "init_required_error": "DATADIS Analyzer has not been initialized. You must run 'da init' first before executing any other command.",
+        "init_required_tip": "Run 'da init' (or 'da init --language en|es') to configure preferences and initialize workspace directories.",
+        "app_version_label": "DATADIS Analyzer Version",
+        "col_version": "Version",
         # da cleanup messages
         "cleanup_title": "🧹 Output Directory Cleanup",
         "cleanup_empty": "Output directory [cyan]{dir}[/cyan] is already empty. No files to delete.",
@@ -275,9 +280,14 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "col_issue": "Detalle de la Incidencia",
         # da init messages
         "init_title": "⚙️ Configuración Inicializada",
+        "init_version_info": "Versión de DATADIS Analyzer: [bold cyan]{version}[/bold cyan]",
         "init_language_set": "Idioma de salida configurado correctamente a: [bold green]Español[/bold green].",
         "init_folders_created": "Carpetas de trabajo inicializadas: [cyan]{input_dir}/[/cyan] y [cyan]{output_dir}/[/cyan].",
         "init_persistence_note": "Esta preferencia se guarda en [cyan]{path}[/cyan] y se aplicará a los comandos siguientes.",
+        "init_required_error": "DATADIS Analyzer no ha sido inicializado. Debe ejecutar 'da init' primero antes de utilizar cualquier otro comando.",
+        "init_required_tip": "Ejecute 'da init' (o 'da init --language en|es') para configurar preferencias e inicializar carpetas de trabajo.",
+        "app_version_label": "Versión de DATADIS Analyzer",
+        "col_version": "Versión",
         # da cleanup messages
         "cleanup_title": "🧹 Limpieza de Carpeta de Salida",
         "cleanup_empty": "La carpeta de salida [cyan]{dir}[/cyan] ya está vacía. No hay archivos para eliminar.",

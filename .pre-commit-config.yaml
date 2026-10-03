@@ -18,3 +18,11 @@ repos:
         args: [--fix]
       # Run Ruff formatter (Python Prettier)
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: calver-version
+        name: CalVer Version Enforcer
+        entry: python3 -m src.version hook
+        language: system
+        pass_filenames: false

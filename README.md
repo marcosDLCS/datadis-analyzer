@@ -3,6 +3,7 @@
 > Energy analytics and fair-share allocation CLI for residential communities (*comunidades de vecinos*) in Spain.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![Version](https://img.shields.io/badge/version-2026.10.001-blue.svg)](pyproject.toml)
 [![CLI Framework](https://img.shields.io/badge/CLI-Typer-009688?style=flat)](https://typer.tiangolo.com/)
 [![Terminal UI](https://img.shields.io/badge/UI-Rich-E9573F?style=flat)](https://rich.readthedocs.io/)
 [![Code Style: Ruff](https://img.shields.io/badge/Code%20Style-Ruff-000000?style=flat&logo=ruff&logoColor=white)](https://astral.sh/ruff)
@@ -16,6 +17,7 @@
 - **🔍 Multi-Dialect CSV Ingestion:** Automatically detects delimiters (`;`, `,`, `\t`), decimal notations (`0,152` vs `0.152`), character encodings (`utf-8`, `utf-8-sig`, `latin-1`, `cp1252`), and date formats (`YYYY/MM/DD`, `YYYY-MM-DD`).
 - **🧮 Exact Fair-Share Math:** Calculates each supply point's (CUPS) percentage share of collective community consumption across months and years, guaranteed to sum to exactly 100.00%.
 - **📊 Rich Terminal Visualizations:** Renders interactive tables, metric overview cards, inline percentage bars (`████████░░`), and alerts for dominant (`★`) or inactive (`(0)`) meters.
+- **🏷️ Automated CalVer Versioning:** Increments release version on every commit following `<year>.<month>.<incremental number>` (e.g., `2026.10.001`), displayed in console banners, initialization cards, and markdown exports.
 - **🌐 Dual-Language Support:** Full English (`en`) and Spanish (`es`) localization, persisted across commands via `.da_config.json`.
 - **📝 Automated Markdown Reporting:** Exports timestamped reports directly into `.output/YYYYMMDD_HHMMSS_*.md`.
 
@@ -143,16 +145,25 @@ Required columns (semicolon or comma delimited):
 
 ## 🎮 CLI Usage Manual
 
-### ⚙️ Workspace Configuration (`da init`)
+> [!IMPORTANT]
+> **Mandatory First Step:** You must run `da init` before executing `da summary`, `da compare`, or `da cleanup`. The initialization records an initialization timestamp in `.da_config.json` and prepares workspace folders.
+
+### ⚙️ Workspace Initialization (`da init`) — *Mandatory*
 ```bash
-da init                 # Interactive language selection
-da init --language es   # Set language to Spanish
-da init -l en           # Set language to English
+da init                 # Interactive language selection and directory initialization
+da init --language es   # Set language to Spanish and mark initialized
+da init -l en           # Set language to English and mark initialized
+```
+
+### 🏷️ Version Display (`da --version`)
+```bash
+da --version            # Display active CalVer version (e.g., 2026.10.001)
+da -V                   # Short version flag
 ```
 
 ### 📖 Help & Manual (`da help`)
 ```bash
-da help                 # Display interactive reference manual
+da help                 # Display interactive reference manual with version header
 da help --lang es       # Display help in Spanish
 ```
 
@@ -189,7 +200,7 @@ da cleanup --output-dir /path/to/output -f # Clean custom output directory
 ## 🧪 Quality Assurance & Tooling
 
 ```bash
-# Run test suite (59 automated tests)
+# Run test suite (75 automated tests)
 pytest -v
 
 # Run Ruff linter and code formatter

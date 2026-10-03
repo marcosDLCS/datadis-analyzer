@@ -10,7 +10,9 @@ from src.config import (
     DEFAULT_OUTPUT_DIR,
     ensure_directories,
     get_language,
+    is_initialized,
     load_config,
+    mark_initialized,
     normalize_language_code,
     set_language,
 )
@@ -38,9 +40,11 @@ from src.presentation.views import (
     render_key_insights,
     render_monthly_comparison_table,
     render_monthly_overview,
+    render_not_initialized_error,
     render_validation_issues,
 )
 from src.processing.aggregator import DataAggregator
+from src.version import get_version
 
 app = typer.Typer(
     help="DATADIS Analyzer: CLI tool to analyze Spanish residential community energy consumption.",
@@ -49,10 +53,29 @@ app = typer.Typer(
 
 
 @app.callback(invoke_without_command=True)
-def default_callback(ctx: typer.Context) -> None:
+def default_callback(
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        help="Show DATADIS Analyzer version and exit.",
+        is_eager=True,
+    ),
+) -> None:
     """Default entrypoint. Renders custom formatted help if no subcommand is passed."""
+    if version:
+        console.print(f"DATADIS Analyzer (da) [bold cyan]v{get_version()}[/bold cyan]")
+        raise typer.Exit(code=0)
     if ctx.invoked_subcommand is None:
         render_help(lang=get_language())
+
+
+def verify_initialized(lang: str | None = None) -> None:
+    """Ensure that the application has been initialized before executing commands."""
+    if not is_initialized():
+        render_not_initialized_error(lang=lang or get_language())
+        raise typer.Exit(code=1)
 
 
 @app.command(name="help")
@@ -92,6 +115,9 @@ def init_cmd(
         console.print(f"\n[bold red]Error:[/bold red] {exc}\n")
         raise typer.Exit(code=1) from exc
 
+    # Persist initialization timestamp
+    mark_initialized()
+
     input_dir, output_dir = ensure_directories()
 
     render_init_success(
@@ -100,6 +126,7 @@ def init_cmd(
         input_dir=input_dir,
         output_dir=output_dir,
         lang=lang_code,
+        version=get_version(),
     )
 
 
@@ -129,6 +156,13 @@ def cleanup_cmd(
 ) -> None:
     """Remove generated reports and clear files from the .output directory."""
     effective_lang = lang or get_language()
+    try:
+        effective_lang = normalize_language_code(effective_lang)
+    except ValueError:
+        effective_lang = "en"
+
+    verify_initialized(effective_lang)
+
     cfg = load_config()
     target_output_dir = output_dir or Path(cfg.output_dir or DEFAULT_OUTPUT_DIR)
 
@@ -226,6 +260,8 @@ def compare_cmd(
         effective_lang = normalize_language_code(effective_lang)
     except ValueError:
         effective_lang = "en"
+
+    verify_initialized(effective_lang)
 
     cfg = load_config()
     target_output_dir = output_dir or Path(cfg.output_dir or DEFAULT_OUTPUT_DIR)
@@ -369,6 +405,8 @@ def summary_cmd(
         effective_lang = normalize_language_code(effective_lang)
     except ValueError:
         effective_lang = "en"
+
+    verify_initialized(effective_lang)
 
     cfg = load_config()
     target_output_dir = output_dir or Path(cfg.output_dir or DEFAULT_OUTPUT_DIR)

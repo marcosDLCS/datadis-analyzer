@@ -54,6 +54,7 @@ def reset_default_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
             language="en",
             input_dir=str(test_input),
             output_dir=str(test_output),
+            initialized_at="2026-10-01T00:00:00",
         ),
         test_config,
     )

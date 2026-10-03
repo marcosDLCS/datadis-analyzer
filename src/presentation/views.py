@@ -15,13 +15,14 @@ from src.processing.models import (
     CommunitySummary,
     ComparisonSummary,
 )
+from src.version import get_version
 
 
 def render_help(lang: str | None = None) -> None:
     """Render a comprehensive, formatted help screen for the DATADIS CLI tool."""
     title_text = Text()
     title_text.append(f"{t('app_title', lang=lang)} ", style="bold yellow")
-    title_text.append("(da)", style="bold cyan")
+    title_text.append(f"(da v{get_version()})", style="bold cyan")
     title_text.append(f"\n{t('app_subtitle', lang=lang)}", style="dim italic")
 
     console.print()
@@ -143,12 +144,15 @@ def render_init_success(
     input_dir: Path | None = None,
     output_dir: Path | None = None,
     lang: str | None = None,
+    version: str | None = None,
 ) -> None:
     """Render confirmation message after running da init."""
     target_lang = lang or lang_code
     lang_name = "Español" if target_lang == "es" else "English"
+    app_version = version or get_version()
     message_lines = [
-        f"✔ {t('init_language_set', lang=target_lang).replace('English', lang_name).replace('Español', lang_name)}"
+        f"✔ {t('init_version_info', lang=target_lang, version=app_version)}",
+        f"✔ {t('init_language_set', lang=target_lang).replace('English', lang_name).replace('Español', lang_name)}",
     ]
     if input_dir is not None and output_dir is not None:
         message_lines.append(
@@ -165,6 +169,25 @@ def render_init_success(
             message,
             title=f"[bold green]{t('init_title', lang=target_lang)}[/bold green]",
             border_style="green",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        )
+    )
+    console.print()
+
+
+def render_not_initialized_error(lang: str | None = None) -> None:
+    """Render error notification when a command is executed before 'da init'."""
+    error_msg = t("init_required_error", lang=lang)
+    tip_msg = t("init_required_tip", lang=lang)
+    body = f"[bold red]Error:[/bold red] {error_msg}\n\n[cyan]{tip_msg}[/cyan]"
+
+    console.print()
+    console.print(
+        Panel(
+            body,
+            title="[bold red]Initialization Required / Inicialización Requerida[/bold red]",
+            border_style="red",
             box=box.ROUNDED,
             padding=(1, 2),
         )

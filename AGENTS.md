@@ -27,6 +27,7 @@
 ```mermaid
 graph TD
     CLI["🎮 src/cli.py\n(Typer Commands & Flags)"] --> CFG["⚙️ src/config.py\n(AppConfig & Path Resolution)"]
+    CLI --> VER["🏷️ src/version.py\n(CalVer Versioning Engine)"]
     CLI --> LOD["📥 src/ingestion/loader.py\n(Discovery & Pandas Normalizer)"]
     LOD --> VAL["🔍 src/ingestion/validator.py\n(Delimiter / Encoding / Schema)"]
     CLI --> AGG["🧮 src/processing/aggregator.py\n(Period Grouping & Math)"]
@@ -44,12 +45,13 @@ datadis-analyzer/
 ├── LICENSE                     # Standard MIT open-source license
 ├── README.md / AGENTS.md       # User guide and agent directives
 ├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits
-├── .pre-commit-config.yaml     # Git hook definitions (Ruff linter & formatter)
+├── .pre-commit-config.yaml     # Git hook definitions (Ruff linter, formatter, CalVer)
 ├── .da_config.json             # Persistent application configuration
 ├── .input/ / .output/          # Raw input CSVs (.input/<year>/) and generated reports
 ├── src/
 │   ├── cli.py                  # Typer CLI application and command dispatch
 │   ├── config.py / i18n.py     # Configuration, path resolution, and translations
+│   ├── version.py              # CalVer version management and pre-commit enforcer
 │   ├── ingestion/              # Delimiter detection, validation, and Pandas loader
 │   ├── processing/             # Aggregation engine, domain models, and share math
 │   └── presentation/           # Rich console UI, views, and Markdown exporter
@@ -65,6 +67,7 @@ datadis-analyzer/
 | **Runtime** | Python 3.11+ | Modern typing, native union types (`X \| Y`) |
 | **CLI & UI** | Typer & Rich | Command-line parser, 80-column tables, visual bars |
 | **Data Engine** | Pandas | CSV normalization, time-series aggregation |
+| **Versioning** | CalVer (`YYYY.MM.NNN`) | Automated per-commit version increments |
 | **Quality** | Ruff & Pre-commit | Linter, code formatter, git hook enforcement |
 | **Testing** | Pytest | Unit and integration test coverage |
 
@@ -81,13 +84,14 @@ pre-commit install
 
 ### Running the CLI
 ```bash
-da init [-l en|es]        # Initialize directories (.input, .output) & set language
+da init [-l en|es]        # Mandatory initialization before running analytics
 da summary [--year YYYY]  # Community summary (annual/monthly overview + export)
 da summary --view monthly # Full month-by-month CUPS breakdown
 da summary --cups <CUPS>  # Inspect specific CUPS trajectory
 da compare [-y YYYY ...]  # Multi-year consumption comparison, trends & export
 da cleanup [-f]           # Clear generated reports from .output/
 da help                   # Interactive manual
+da --version / da -V      # Display active application version
 ```
 
 ### Testing & Quality Checks
@@ -95,6 +99,8 @@ da help                   # Interactive manual
 pytest -v                 # Run all automated tests
 ruff check --fix .        # Lint and auto-fix code
 ruff format .             # Format code
+python -m src.version check # Validate version consistency
+python -m src.version bump  # Bump version before committing
 pre-commit run --all-files # Run all git hooks
 ```
 
@@ -113,6 +119,8 @@ pre-commit run --all-files # Run all git hooks
 5. **Special CUPS Classification:**
    - Dominant consumer (`★`): >30% of total consumption (e.g., community HVAC/pumps).
    - Inactive supply (`(0)`): <1 kWh total consumption.
+6. **Mandatory Workspace Initialization Invariant:** `da init` must be successfully run before executing `da summary`, `da compare`, or `da cleanup`. The command records `initialized_at` timestamp in `.da_config.json`.
+7. **CalVer Pattern Invariant:** The version string adheres strictly to `<year>.<month>.<incremental number (3 positions)>` (e.g. `2026.10.001`). The version appears in the console banner, during `da init`, and in all generated markdown reports.
 
 ---
 
@@ -126,6 +134,7 @@ pre-commit run --all-files # Run all git hooks
 - **🧪 Directive 6: Test Completeness.** Any new calculation logic, CLI flag, or validation rule must include automated unit tests in `tests/`. Always run `pytest` before finalizing tasks.
 - **🧹 Directive 7: Ruff & Pre-Commit Adherence.** Run `ruff check --fix .` and `ruff format .` before committing changes. Git pre-commit hooks will automatically reject non-compliant commits.
 - **📝 Directive 8: Conventional Commits.** Adhere strictly to the Conventional Commits specification documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+- **🏷️ Directive 9: CalVer Increments on Every Commit.** Every commit must increment the CalVer sequence (`python -m src.version bump`) so that each commit has a distinct version in `src/version.py` and `pyproject.toml`. Pre-commit hooks will enforce version validity.
 
 ---
 
