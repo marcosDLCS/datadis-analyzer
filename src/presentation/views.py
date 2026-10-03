@@ -111,18 +111,31 @@ def render_help(lang: Optional[str] = None) -> None:
     console.print()
 
 
-def render_init_success(lang_code: str, config_path: Path, lang: Optional[str] = None) -> None:
+def render_init_success(
+    lang_code: str,
+    config_path: Path,
+    input_dir: Optional[Path] = None,
+    output_dir: Optional[Path] = None,
+    lang: Optional[str] = None,
+) -> None:
     """Render confirmation message after running da init."""
-    lang_name = "Español" if lang_code == "es" else "English"
-    message = (
-        f"✔ {t('init_language_set', lang=lang_code).replace('English', lang_name).replace('Español', lang_name)}\n"
-        f"[dim]{t('init_persistence_note', lang=lang_code, path=str(config_path))}[/dim]"
-    )
+    target_lang = lang or lang_code
+    lang_name = "Español" if target_lang == "es" else "English"
+    message_lines = [
+        f"✔ {t('init_language_set', lang=target_lang).replace('English', lang_name).replace('Español', lang_name)}"
+    ]
+    if input_dir is not None and output_dir is not None:
+        message_lines.append(
+            f"✔ {t('init_folders_created', lang=target_lang, input_dir=str(input_dir), output_dir=str(output_dir))}"
+        )
+    message_lines.append(f"[dim]{t('init_persistence_note', lang=target_lang, path=str(config_path))}[/dim]")
+
+    message = "\n".join(message_lines)
     console.print()
     console.print(
         Panel(
             message,
-            title=f"[bold green]{t('init_title', lang=lang_code)}[/bold green]",
+            title=f"[bold green]{t('init_title', lang=target_lang)}[/bold green]",
             border_style="green",
             box=box.ROUNDED,
             padding=(1, 2),

@@ -111,7 +111,7 @@ Required DATADIS CSV columns (semicolon or comma delimited):
 
 ### 1. Initialize Configuration (`da init`)
 
-Select and persist the output language between **English** (default) and **Spanish**:
+Initialize workspace directories (`./.input/` and `./.output/`) and configure the output language between **English** (default) and **Spanish**:
 
 ```bash
 # Interactive selection:
@@ -122,7 +122,9 @@ da init --language es
 da init -l en
 ```
 
-The selected preference is saved to `.da_config.json` and automatically remembered across all future commands.
+Running `da init` will:
+1. Automatically create the `./.input` and `./.output` directories if they do not exist.
+2. Persist your language preference in `.da_config.json` for all subsequent commands.
 
 ### 2. Help Command (`da help`)
 

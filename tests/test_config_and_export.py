@@ -7,6 +7,7 @@ from typer.testing import CliRunner
 from src.cli import app
 from src.config import (
     AppConfig,
+    ensure_directories,
     get_language,
     load_config,
     save_config,
@@ -121,3 +122,51 @@ def test_cli_summary_exports_markdown_file(sample_input_hierarchy: Path, tmp_pat
     assert len(saved_files) == 1
     # Check datetime with seconds pattern
     assert re.match(r"^\d{8}_\d{6}_.*\.md$", saved_files[0].name) is not None
+
+
+def test_cli_init_creates_folders_if_not_exist(tmp_path: Path, monkeypatch) -> None:
+    """The 'da init' command must create .input and .output directories if they do not exist."""
+    monkeypatch.chdir(tmp_path)
+    target_input = tmp_path / ".input"
+    target_output = tmp_path / ".output"
+
+    assert not target_input.exists()
+    assert not target_output.exists()
+
+    result = runner.invoke(app, ["init", "--language", "en"])
+    assert result.exit_code == 0
+    assert "Workspace directories initialized" in result.stdout
+    assert target_input.is_dir()
+    assert target_output.is_dir()
+
+
+def test_cli_init_creates_folders_spanish(tmp_path: Path, monkeypatch) -> None:
+    """The 'da init -l es' must display Spanish folder creation message and create folders."""
+    monkeypatch.chdir(tmp_path)
+    target_input = tmp_path / ".input"
+    target_output = tmp_path / ".output"
+
+    result = runner.invoke(app, ["init", "--language", "es"])
+    assert result.exit_code == 0
+    assert "Carpetas de trabajo inicializadas" in result.stdout
+    assert target_input.is_dir()
+    assert target_output.is_dir()
+
+
+def test_ensure_directories_creates_and_is_idempotent(tmp_path: Path) -> None:
+    """ensure_directories creates paths and handles existing folders without error."""
+    in_dir = tmp_path / "custom_in"
+    out_dir = tmp_path / "custom_out"
+    config = AppConfig(language="es", input_dir=str(in_dir), output_dir=str(out_dir))
+
+    assert not in_dir.exists()
+    assert not out_dir.exists()
+
+    p_in, p_out = ensure_directories(config=config)
+    assert p_in.is_dir()
+    assert p_out.is_dir()
+
+    # Calling again on existing directories must succeed without raising error
+    p_in_2, p_out_2 = ensure_directories(config=config)
+    assert p_in_2.is_dir()
+    assert p_out_2.is_dir()

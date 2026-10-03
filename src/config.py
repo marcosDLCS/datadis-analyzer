@@ -132,3 +132,22 @@ def set_language(language: str, path: Optional[Path] = None) -> str:
 def get_language(path: Optional[Path] = None) -> str:
     """Retrieve the currently configured language code ('en' or 'es')."""
     return load_config(path).language
+
+
+def ensure_directories(
+    config: Optional[AppConfig] = None,
+    config_path: Optional[Path] = None,
+) -> tuple[Path, Path]:
+    """Ensure that the input and output directories exist on disk, creating them if necessary.
+
+    Returns:
+        Tuple of (input_directory_path, output_directory_path).
+    """
+    cfg = config or load_config(config_path)
+    input_path = Path(cfg.input_dir)
+    output_path = Path(cfg.output_dir)
+
+    input_path.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    return input_path, output_path

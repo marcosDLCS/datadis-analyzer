@@ -109,6 +109,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         # da init messages
         "init_title": "⚙️ Configuration Initialized",
         "init_language_set": "Output language successfully configured to: [bold green]English[/bold green].",
+        "init_folders_created": "Workspace directories initialized: [cyan]{input_dir}/[/cyan] and [cyan]{output_dir}/[/cyan].",
         "init_persistence_note": "This preference is persisted in [cyan]{path}[/cyan] and will apply to all subsequent commands.",
         # Report export
         "report_generated": "Markdown summary report saved to: [cyan]{path}[/cyan]",
@@ -225,6 +226,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         # da init messages
         "init_title": "⚙️ Configuración Inicializada",
         "init_language_set": "Idioma de salida configurado correctamente a: [bold green]Español[/bold green].",
+        "init_folders_created": "Carpetas de trabajo inicializadas: [cyan]{input_dir}/[/cyan] y [cyan]{output_dir}/[/cyan].",
         "init_persistence_note": "Esta preferencia se guarda en [cyan]{path}[/cyan] y se aplicará a los comandos siguientes.",
         # Report export
         "report_generated": "Informe de resumen en Markdown guardado en: [cyan]{path}[/cyan]",

@@ -14,7 +14,7 @@ Guidelines and repository context for AI agents and human contributors working o
 - Aggregate community energy consumption across all individual CUPS (*Código Unificado de Punto de Suministro*).
 - Calculate each CUPS's percentage share of the total community consumption for each year and month.
 - Render high-impact terminal visualizations (tables, metric cards, inline percentage bars, and analytical observations) using `rich`.
-- Persist user configuration (output language between English and Spanish) via `da init`.
+- Persist user configuration (output language between English and Spanish) and initialize workspace directories (.input, .output) via `da init`.
 - Automatically export every generated community summary to `.output/` as a timestamped Markdown report (`YYYYMMDD_HHMMSS_*.md`).
 
 ---
@@ -85,7 +85,7 @@ pip install -e ".[dev]"
 
 ### Running the CLI
 ```bash
-# Initialize and persist language preference (English default, Spanish option)
+# Initialize workspace directories (.input, .output) and persist language preference (English default, Spanish option)
 da init
 da init --language es
 da init -l en

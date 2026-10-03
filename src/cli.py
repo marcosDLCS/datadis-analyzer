@@ -9,6 +9,7 @@ from src.config import (
     CONFIG_FILE_PATH,
     DEFAULT_INPUT_DIR,
     DEFAULT_OUTPUT_DIR,
+    ensure_directories,
     get_language,
     normalize_language_code,
     set_language,
@@ -81,7 +82,15 @@ def init_cmd(
         console.print(f"\n[bold red]Error:[/bold red] {exc}\n")
         raise typer.Exit(code=1) from exc
 
-    render_init_success(lang_code=lang_code, config_path=CONFIG_FILE_PATH, lang=lang_code)
+    input_dir, output_dir = ensure_directories()
+
+    render_init_success(
+        lang_code=lang_code,
+        config_path=CONFIG_FILE_PATH,
+        input_dir=input_dir,
+        output_dir=output_dir,
+        lang=lang_code,
+    )
 
 
 @app.command(name="summary")
