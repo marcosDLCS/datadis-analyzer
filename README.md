@@ -198,3 +198,17 @@ Contributions are welcome. Please consult:
 - 🤖 [AGENTS.md](AGENTS.md) — Technical instructions and architectural guidelines for AI agents and developers.
 
 This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## 🤖 AI Development & Vibe Coding Disclosure
+
+This project was developed using a **vibe coding** workflow, pairing natural language direction with agentic code generation and automated quality verification:
+
+- **🛠️ Agentic IDE:** Google Antigravity IDE (Advanced Agentic Coding environment by Google DeepMind).
+- **🧠 Models:** Google Gemini (Gemini 2.5 Pro and Gemini 2.5 Flash).
+- **🛡️ Governance & Quality Assurance:**
+  - Automated validation with 41 unit, integration, and CLI tests via **Pytest**.
+  - Strict pre-commit enforcement with **Ruff** for linting and code formatting.
+  - Domain invariant guarantees (100.00% fair-share mathematical sum).
+  - Absolute anonymization protocols for residential energy data.
