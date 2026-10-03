@@ -14,6 +14,7 @@ from src.presentation.views import (
     render_monthly_overview,
     render_not_initialized_error,
     render_validation_issues,
+    render_version,
 )
 
 __all__ = [
@@ -33,4 +34,5 @@ __all__ = [
     "render_monthly_overview",
     "render_not_initialized_error",
     "render_validation_issues",
+    "render_version",
 ]

@@ -42,6 +42,7 @@ from src.presentation.views import (
     render_monthly_overview,
     render_not_initialized_error,
     render_validation_issues,
+    render_version,
 )
 from src.processing.aggregator import DataAggregator
 from src.version import get_version
@@ -62,7 +63,7 @@ def default_callback(ctx: typer.Context) -> None:
 @app.command(name="version")
 def version_cmd() -> None:
     """Show DATADIS Analyzer version and exit."""
-    console.print(f"DATADIS Analyzer (da) [bold cyan]v{get_version()}[/bold cyan]")
+    render_version()
 
 
 def verify_initialized(lang: str | None = None) -> None:

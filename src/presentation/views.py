@@ -1,9 +1,11 @@
 """Terminal views, tables, cards, and help screens rendered with Rich."""
 
+import sys
 from pathlib import Path
 
 from rich import box
 from rich.align import Align
+from rich.columns import Columns
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -194,6 +196,45 @@ def render_not_initialized_error(lang: str | None = None) -> None:
             border_style="red",
             box=box.ROUNDED,
             padding=(1, 2),
+        )
+    )
+    console.print()
+
+
+def render_version() -> None:
+    """Render a rich, formatted version panel for 'da version'."""
+    version = get_version()
+    py_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+    # Build inner content table (two-column key/value layout)
+    info_table = Table.grid(padding=(0, 2))
+    info_table.add_column(style="bold cyan", no_wrap=True)
+    info_table.add_column(style="white")
+
+    info_table.add_row("⚡ Version", f"[bold cyan]{version}[/bold cyan]")
+    info_table.add_row("🐍 Python", f"[dim]{py_version}[/dim]")
+    info_table.add_row("📜 License", "[dim]MIT[/dim]")
+    info_table.add_row(
+        "🌐 Source",
+        "[dim]github.com/marcosDLCS/datadis-analyzer[/dim]",
+    )
+
+    title_text = Text()
+    title_text.append("DATADIS Analyzer ", style="bold yellow")
+    title_text.append("(da)", style="bold white")
+
+    subtitle = Text("\nSpain residential community energy analytics CLI\n", style="dim italic")
+
+    body = Text.assemble(title_text, subtitle)
+    panel_content = Columns([body, info_table], equal=False, expand=True)
+
+    console.print()
+    console.print(
+        Panel(
+            panel_content,
+            box=box.DOUBLE,
+            border_style="cyan",
+            padding=(1, 3),
         )
     )
     console.print()
