@@ -48,6 +48,16 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "Standard DATADIS CSV columns (cups, fecha, hora, consumo_kWh) and delimiters (;, ,) are automatically validated."
         ),
         "quick_start_title": "🚀 Quick Start Examples",
+        "quick_start_col_cmd": "Command / Example",
+        "quick_start_col_desc": "Description",
+        "quick_start_ex_init": "Configure output language and initialize workspace.",
+        "quick_start_ex_summary": "Complete annual & monthly community breakdown.",
+        "quick_start_ex_year": "Inspect year 2025 specifically.",
+        "quick_start_ex_monthly": "Show full CUPS percentage shares for each month.",
+        "quick_start_ex_cups": "Track consumption for one specific meter.",
+        "quick_start_ex_compare": "Multi-year consumption comparison and trends.",
+        "quick_start_ex_cleanup": "Clear generated reports from .output directory.",
+        "quick_start_ex_version": "Display active CalVer application version.",
         "quick_start_text": (
             "$ da init --language es               # Configure output language to Spanish\n"
             "$ da summary                         # Complete annual & monthly community breakdown\n"
@@ -221,6 +231,16 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "Las columnas estándar de DATADIS (cups, fecha, hora, consumo_kWh) y delimitadores (;, ,) se validan automáticamente."
         ),
         "quick_start_title": "🚀 Ejemplos de Inicio Rápido",
+        "quick_start_col_cmd": "Comando / Ejemplo",
+        "quick_start_col_desc": "Descripción",
+        "quick_start_ex_init": "Configurar idioma de salida e inicializar espacio.",
+        "quick_start_ex_summary": "Desglose comunitario completo (anual y mensual).",
+        "quick_start_ex_year": "Inspeccionar específicamente el año 2025.",
+        "quick_start_ex_monthly": "Mostrar porcentajes mensuales completos por CUPS.",
+        "quick_start_ex_cups": "Seguir el consumo de un contador específico.",
+        "quick_start_ex_compare": "Comparación multianual y tendencias de consumo.",
+        "quick_start_ex_cleanup": "Limpiar informes generados de la carpeta .output.",
+        "quick_start_ex_version": "Mostrar la versión CalVer activa de la aplicación.",
         "quick_start_text": (
             "$ da init --language es               # Configurar idioma de salida en español\n"
             "$ da summary                         # Desglose comunitario completo (anual y mensual)\n"

@@ -133,14 +133,35 @@ def render_help(lang: str | None = None) -> None:
         )
     )
     console.print()
-    console.print(
-        Panel(
-            t("quick_start_text", lang=lang),
-            title=t("quick_start_title", lang=lang),
-            border_style="green",
-            box=box.ROUNDED,
-        )
+    # Quick Start Examples Table
+    examples_table = Table(
+        title=f"[bold yellow]{t('quick_start_title', lang=lang)}[/bold yellow]",
+        box=box.ROUNDED,
+        header_style="bold cyan",
+        show_lines=False,
     )
+    examples_table.add_column(
+        t("quick_start_col_cmd", lang=lang),
+        style="bold green",
+        no_wrap=True,
+    )
+    examples_table.add_column(
+        t("quick_start_col_desc", lang=lang),
+        style="white",
+    )
+
+    examples_table.add_row("da init --language es", t("quick_start_ex_init", lang=lang))
+    examples_table.add_row("da summary", t("quick_start_ex_summary", lang=lang))
+    examples_table.add_row("da summary --year 2025", t("quick_start_ex_year", lang=lang))
+    examples_table.add_row("da summary --view monthly", t("quick_start_ex_monthly", lang=lang))
+    examples_table.add_row(
+        "da summary --cups ES0021000000000001AA", t("quick_start_ex_cups", lang=lang)
+    )
+    examples_table.add_row("da compare -y 2024 -y 2025", t("quick_start_ex_compare", lang=lang))
+    examples_table.add_row("da cleanup -f", t("quick_start_ex_cleanup", lang=lang))
+    examples_table.add_row("da version", t("quick_start_ex_version", lang=lang))
+
+    console.print(examples_table)
     console.print()
 
 

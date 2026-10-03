@@ -10,13 +10,24 @@ runner = CliRunner()
 
 
 def test_cli_help_command() -> None:
-    """The 'da help' command should display the formatted reference guide."""
+    """The 'da help' command should display the formatted reference guide with tables."""
     result = runner.invoke(app, ["help"])
     assert result.exit_code == 0
     assert "DATADIS ANALYZER" in result.stdout
     assert "AVAILABLE COMMANDS" in result.stdout
     assert "da summary" in result.stdout
     assert "OPTIONS FOR 'da summary'" in result.stdout
+    assert "Quick Start Examples" in result.stdout
+    assert "Command / Example" in result.stdout
+
+
+def test_cli_help_spanish_command() -> None:
+    """The 'da help --lang es' command displays Spanish tables including Quick Start Examples."""
+    result = runner.invoke(app, ["help", "--lang", "es"])
+    assert result.exit_code == 0
+    assert "COMANDOS DISPONIBLES" in result.stdout
+    assert "Ejemplos de Inicio Rápido" in result.stdout
+    assert "Comando / Ejemplo" in result.stdout
 
 
 def test_cli_no_args_displays_help() -> None:
