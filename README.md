@@ -206,7 +206,7 @@ This project is licensed under the [MIT License](LICENSE).
 This project was developed using a **vibe coding** workflow, pairing natural language direction with agentic code generation and automated quality verification:
 
 - **🛠️ Agentic IDE:** Google Antigravity IDE (Advanced Agentic Coding environment by Google DeepMind).
-- **🧠 Models:** Google Gemini (Gemini 2.5 Pro and Gemini 2.5 Flash).
+- **🧠 Models:** Google Gemini (Gemini Flash 3.8 in High reasoning).
 - **🛡️ Governance & Quality Assurance:**
   - Automated validation with 41 unit, integration, and CLI tests via **Pytest**.
   - Strict pre-commit enforcement with **Ruff** for linting and code formatting.
