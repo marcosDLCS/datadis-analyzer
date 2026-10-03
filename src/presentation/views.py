@@ -593,16 +593,31 @@ def render_comparison_overview(comparison: ComparisonSummary, lang: str | None =
         f"[bold white]{t('compare_years_label', lang=lang)}[/bold white] [bold cyan]{years_str}[/bold cyan]"
     )
 
+    # Comparable period note
+    if comparison.comparable_months:
+        first_m = get_month_name(min(comparison.comparable_months), lang=lang, short=True)
+        last_m = get_month_name(max(comparison.comparable_months), lang=lang, short=True)
+        period_str = f"{first_m} - {last_m}"
+        lines.append(
+            f"  [dim cyan]{t('comparable_period_note', lang=lang, period=period_str, months=len(comparison.comparable_months))}[/dim cyan]"
+        )
+
     # Annual totals
     for y in comparison.years:
-        kwh = comparison.annual_totals[y]
-        lines.append(f"  • [bold]{y}:[/bold] [yellow]{format_kwh(kwh)}[/yellow]")
+        raw_kwh = comparison.annual_totals[y]
+        comp_kwh = comparison.comparable_annual_totals.get(y, raw_kwh)
+        if comparison.excluded_months and comp_kwh != raw_kwh:
+            lines.append(
+                f"  • [bold]{y}:[/bold] [yellow]{format_kwh(comp_kwh)}[/yellow] [dim]({format_kwh(raw_kwh)} total)[/dim]"
+            )
+        else:
+            lines.append(f"  • [bold]{y}:[/bold] [yellow]{format_kwh(raw_kwh)}[/yellow]")
 
     lines.append("")
-    # Overall change
+    # Overall change across comparable months
     diff = comparison.total_diff_kwh
     pct = comparison.total_pct_change
-    if pct is not None:
+    if diff is not None and pct is not None:
         if diff < 0:
             status_text = t(
                 "compare_status_saving",
@@ -620,10 +635,12 @@ def render_comparison_overview(comparison: ComparisonSummary, lang: str | None =
         else:
             status_text = t("compare_status_stable", lang=lang, diff_kwh=format_kwh(diff))
         lines.append(f"[bold]{t('compare_overall_change', lang=lang)}[/bold] {status_text}")
+    elif comparison.excluded_months and not comparison.comparable_months:
+        lines.append(f"[yellow]{t('no_comparable_months', lang=lang)}[/yellow]")
 
     # Highlights
     highlights: list[str] = []
-    if comparison.max_decrease_month:
+    if comparison.max_decrease_month and comparison.max_decrease_month.diff_kwh is not None:
         m_name = get_month_name(comparison.max_decrease_month.month, lang=lang)
         pct_val = abs(comparison.max_decrease_month.pct_change or 0.0)
         highlights.append(
@@ -631,7 +648,7 @@ def render_comparison_overview(comparison: ComparisonSummary, lang: str | None =
             f"([green]-{pct_val:.1f}%[/green] / [green]-{format_kwh(abs(comparison.max_decrease_month.diff_kwh))}[/green])"
         )
 
-    if comparison.max_increase_month:
+    if comparison.max_increase_month and comparison.max_increase_month.diff_kwh is not None:
         m_name = get_month_name(comparison.max_increase_month.month, lang=lang)
         pct_val = comparison.max_increase_month.pct_change or 0.0
         highlights.append(
@@ -654,6 +671,15 @@ def render_comparison_overview(comparison: ComparisonSummary, lang: str | None =
     if highlights:
         lines.append("")
         lines.extend(f"  {h}" for h in highlights)
+
+    if comparison.excluded_months:
+        lines.append("")
+        ex_names = ", ".join(
+            get_month_name(m, lang=lang, short=True) for m in comparison.excluded_months
+        )
+        lines.append(
+            f"  [dim yellow]* {t('excluded_months_note', lang=lang, count=len(comparison.excluded_months), months=ex_names)}[/dim yellow]"
+        )
 
     console.print()
     console.print(
@@ -685,15 +711,28 @@ def render_monthly_comparison_table(comparison: ComparisonSummary, lang: str | N
 
     for m in comparison.monthly_comparisons:
         m_label = get_month_name(m.month, lang=lang, short=True)
-        year_cells = [format_kwh(m.yearly_kwh.get(y, 0.0)) for y in comparison.years]
+
+        year_cells: list[str] = []
+        for y in comparison.years:
+            status = m.year_status.get(y, "complete")
+            val = m.yearly_kwh.get(y)
+            if status == "no_data" or val is None:
+                year_cells.append(f"[dim]{t('no_data', lang=lang)}[/dim]")
+            elif status == "incomplete":
+                year_cells.append(f"[yellow]{format_kwh(val)}*[/yellow]")
+            else:
+                year_cells.append(format_kwh(val))
 
         # Diff cell
-        if m.diff_kwh < 0:
-            diff_cell = f"[green]-{format_kwh(abs(m.diff_kwh))}[/green]"
-        elif m.diff_kwh > 0:
-            diff_cell = f"[red]+{format_kwh(m.diff_kwh)}[/red]"
+        if m.diff_kwh is not None:
+            if m.diff_kwh < 0:
+                diff_cell = f"[green]-{format_kwh(abs(m.diff_kwh))}[/green]"
+            elif m.diff_kwh > 0:
+                diff_cell = f"[red]+{format_kwh(m.diff_kwh)}[/red]"
+            else:
+                diff_cell = "[dim]0.00 kWh[/dim]"
         else:
-            diff_cell = "[dim]0.00 kWh[/dim]"
+            diff_cell = "[dim]—[/dim]"
 
         # Variation & Trend
         if m.pct_change is not None:
@@ -707,42 +746,65 @@ def render_monthly_comparison_table(comparison: ComparisonSummary, lang: str | N
                 var_cell = "[dim]— 0.0%[/dim]"
                 trend_cell = f"[dim]{t('compare_trend_equal', lang=lang)}[/dim]"
         else:
-            var_cell = "[dim]N/A[/dim]"
-            trend_cell = "[dim]—[/dim]"
+            var_cell = "[dim]—[/dim]"
+            trend_cell = (
+                f"[dim]{t('no_data', lang=lang)}[/dim]" if not m.is_complete else "[dim]—[/dim]"
+            )
 
         table.add_row(m_label, *year_cells, diff_cell, var_cell, trend_cell)
 
-    # Total Row
+    # Total Row (Comparable period)
     table.add_section()
-    total_year_cells = [format_kwh(comparison.annual_totals[y]) for y in comparison.years]
-    if comparison.total_diff_kwh < 0:
-        total_diff_cell = f"[bold green]-{format_kwh(abs(comparison.total_diff_kwh))}[/bold green]"
-    elif comparison.total_diff_kwh > 0:
-        total_diff_cell = f"[bold red]+{format_kwh(comparison.total_diff_kwh)}[/bold red]"
-    else:
-        total_diff_cell = "[bold]0.00 kWh[/bold]"
+    if comparison.comparable_months:
+        first_m = get_month_name(min(comparison.comparable_months), lang=lang, short=True)
+        last_m = get_month_name(max(comparison.comparable_months), lang=lang, short=True)
+        total_label = (
+            f"Total ({first_m}-{last_m})" if len(comparison.comparable_months) < 12 else "Total"
+        )
+        total_year_cells = [
+            format_kwh(comparison.comparable_annual_totals[y]) for y in comparison.years
+        ]
+        diff_tot = comparison.total_diff_kwh
+        pct_tot = comparison.total_pct_change
 
-    if comparison.total_pct_change is not None:
-        if comparison.total_pct_change < 0:
-            total_var_cell = f"[bold green]▼ {comparison.total_pct_change:.1f}%[/bold green]"
-            total_trend_cell = f"[bold green]{t('compare_trend_reduced', lang=lang)}[/bold green]"
-        elif comparison.total_pct_change > 0:
-            total_var_cell = f"[bold red]▲ +{comparison.total_pct_change:.1f}%[/bold red]"
-            total_trend_cell = f"[bold red]{t('compare_trend_increased', lang=lang)}[/bold red]"
+        if diff_tot is not None:
+            if diff_tot < 0:
+                total_diff_cell = f"[bold green]-{format_kwh(abs(diff_tot))}[/bold green]"
+            elif diff_tot > 0:
+                total_diff_cell = f"[bold red]+{format_kwh(diff_tot)}[/bold red]"
+            else:
+                total_diff_cell = "[bold]0.00 kWh[/bold]"
         else:
-            total_var_cell = "[bold dim]— 0.0%[/bold dim]"
-            total_trend_cell = f"[bold dim]{t('compare_trend_equal', lang=lang)}[/bold dim]"
-    else:
-        total_var_cell = "[dim]N/A[/dim]"
-        total_trend_cell = "[dim]—[/dim]"
+            total_diff_cell = "[dim]—[/dim]"
 
-    table.add_row(
-        "[bold]Total[/bold]",
-        *total_year_cells,
-        total_diff_cell,
-        total_var_cell,
-        total_trend_cell,
-    )
+        if pct_tot is not None:
+            if pct_tot < 0:
+                total_var_cell = f"[bold green]▼ {pct_tot:.1f}%[/bold green]"
+                total_trend_cell = (
+                    f"[bold green]{t('compare_trend_reduced', lang=lang)}[/bold green]"
+                )
+            elif pct_tot > 0:
+                total_var_cell = f"[bold red]▲ +{pct_tot:.1f}%[/bold red]"
+                total_trend_cell = f"[bold red]{t('compare_trend_increased', lang=lang)}[/bold red]"
+            else:
+                total_var_cell = "[bold dim]— 0.0%[/bold dim]"
+                total_trend_cell = f"[bold dim]{t('compare_trend_equal', lang=lang)}[/bold dim]"
+        else:
+            total_var_cell = "[dim]—[/dim]"
+            total_trend_cell = "[dim]—[/dim]"
+
+        table.add_row(
+            f"[bold]{total_label}[/bold]",
+            *total_year_cells,
+            total_diff_cell,
+            total_var_cell,
+            total_trend_cell,
+        )
+    else:
+        raw_year_cells = [format_kwh(comparison.annual_totals[y]) for y in comparison.years]
+        table.add_row(
+            "[bold]Total[/bold]", *raw_year_cells, "[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]"
+        )
 
     console.print(table)
     console.print()
@@ -756,8 +818,14 @@ def render_cups_comparison_table(comparison: ComparisonSummary, lang: str | None
     earliest_y = comparison.years[0]
     latest_y = comparison.years[-1]
 
+    sub_note = ""
+    if comparison.comparable_months and len(comparison.comparable_months) < 12:
+        first_m = get_month_name(min(comparison.comparable_months), lang=lang, short=True)
+        last_m = get_month_name(max(comparison.comparable_months), lang=lang, short=True)
+        sub_note = f" [{first_m}-{last_m}]"
+
     table = Table(
-        title=f"[bold yellow]{t('compare_cups_title', lang=lang)} ({earliest_y} ➔ {latest_y})[/bold yellow]",
+        title=f"[bold yellow]{t('compare_cups_title', lang=lang)} ({earliest_y} ➔ {latest_y}{sub_note})[/bold yellow]",
         box=box.ROUNDED,
         header_style="bold cyan",
         show_lines=False,

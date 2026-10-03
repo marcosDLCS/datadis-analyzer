@@ -1,5 +1,7 @@
 """Core data processing and aggregation logic for DATADIS energy consumption."""
 
+import calendar
+
 import pandas as pd
 
 from src.config import (
@@ -260,29 +262,57 @@ class DataAggregator:
 
         filtered_df = df[df[COL_YEAR].isin(selected_years)]
 
-        # 1. Monthly totals per year
-        monthly_grouped = (
-            filtered_df.groupby([COL_YEAR, COL_MONTH])[COL_CONSUMPTION_KWH].sum().to_dict()
-        )
-
         earliest_year = selected_years[0]
         latest_year = selected_years[-1]
 
+        # 1. Pre-aggregate monthly sums and distinct days per (year, month)
+        monthly_sums = (
+            filtered_df.groupby([COL_YEAR, COL_MONTH])[COL_CONSUMPTION_KWH].sum().to_dict()
+        )
+        monthly_days = filtered_df.groupby([COL_YEAR, COL_MONTH])[COL_DATE].nunique().to_dict()
+
         monthly_comparisons: list[MonthComparison] = []
         for m in range(1, 13):
-            yearly_kwh = {y: float(monthly_grouped.get((y, m), 0.0)) for y in selected_years}
-            # Only include months where at least one year has recorded data
-            if not any(kwh > 0 for kwh in yearly_kwh.values()):
+            # Check if any year has records for this month
+            has_records = any((y, m) in monthly_sums for y in selected_years)
+            if not has_records:
                 continue
 
-            base_kwh = yearly_kwh[earliest_year]
-            target_kwh = yearly_kwh[latest_year]
-            diff_kwh = target_kwh - base_kwh
-            pct_change = (
-                ((diff_kwh / base_kwh) * 100.0)
-                if base_kwh > 0
-                else (0.0 if target_kwh == 0 else None)
-            )
+            yearly_kwh: dict[int, float | None] = {}
+            year_status: dict[int, str] = {}
+            year_days: dict[int, tuple[int, int]] = {}
+            all_years_complete = True
+
+            for y in selected_years:
+                expected_days = calendar.monthrange(y, m)[1]
+                actual_days = int(monthly_days.get((y, m), 0))
+                year_days[y] = (actual_days, expected_days)
+
+                if (y, m) not in monthly_sums or actual_days == 0:
+                    yearly_kwh[y] = None
+                    year_status[y] = "no_data"
+                    all_years_complete = False
+                elif actual_days < expected_days:
+                    yearly_kwh[y] = float(monthly_sums[(y, m)])
+                    year_status[y] = "incomplete"
+                    all_years_complete = False
+                else:
+                    yearly_kwh[y] = float(monthly_sums[(y, m)])
+                    year_status[y] = "complete"
+
+            # Invariant: If a month lacks complete data in ANY year, exclude it from delta comparison
+            if all_years_complete:
+                base_kwh = float(yearly_kwh[earliest_year] or 0.0)
+                target_kwh = float(yearly_kwh[latest_year] or 0.0)
+                diff_kwh: float | None = target_kwh - base_kwh
+                pct_change: float | None = (
+                    ((diff_kwh / base_kwh) * 100.0)
+                    if base_kwh > 0
+                    else (0.0 if target_kwh == 0 else None)
+                )
+            else:
+                diff_kwh = None
+                pct_change = None
 
             monthly_comparisons.append(
                 MonthComparison(
@@ -290,23 +320,48 @@ class DataAggregator:
                     yearly_kwh=yearly_kwh,
                     diff_kwh=diff_kwh,
                     pct_change=pct_change,
+                    is_complete=all_years_complete,
+                    year_status=year_status,
+                    year_days=year_days,
                 )
             )
 
-        # 2. Annual totals
+        # 2. Determine comparable and excluded months
+        comparable_months = [m.month for m in monthly_comparisons if m.is_complete]
+        excluded_months = [m.month for m in monthly_comparisons if not m.is_complete]
+
+        # 3. Annual totals (raw overall consumption)
         annual_totals = {
             y: float(filtered_df[filtered_df[COL_YEAR] == y][COL_CONSUMPTION_KWH].sum())
             for y in selected_years
         }
-        total_diff_kwh = annual_totals[latest_year] - annual_totals[earliest_year]
-        total_pct_change = (
-            ((total_diff_kwh / annual_totals[earliest_year]) * 100.0)
-            if annual_totals[earliest_year] > 0
-            else None
-        )
 
-        # 3. Peak increase and decrease months
-        valid_months = [m for m in monthly_comparisons if m.pct_change is not None]
+        # 4. Comparable annual totals & variations (apples-to-apples across complete months)
+        if comparable_months:
+            comp_df = filtered_df[filtered_df[COL_MONTH].isin(comparable_months)]
+            comparable_annual_totals = {
+                y: float(comp_df[comp_df[COL_YEAR] == y][COL_CONSUMPTION_KWH].sum())
+                for y in selected_years
+            }
+            total_diff_kwh: float | None = (
+                comparable_annual_totals[latest_year] - comparable_annual_totals[earliest_year]
+            )
+            base_comp = comparable_annual_totals[earliest_year]
+            total_pct_change: float | None = (
+                ((total_diff_kwh / base_comp) * 100.0)
+                if base_comp > 0
+                else (0.0 if comparable_annual_totals[latest_year] == 0 else None)
+            )
+        else:
+            comp_df = filtered_df
+            comparable_annual_totals = dict.fromkeys(selected_years, 0.0)
+            total_diff_kwh = None
+            total_pct_change = None
+
+        # 5. Peak increase and decrease months (evaluated strictly among complete months)
+        valid_months = [
+            m for m in monthly_comparisons if m.is_complete and m.pct_change is not None
+        ]
         max_increase_month = (
             max(valid_months, key=lambda m: m.pct_change or 0.0) if valid_months else None
         )
@@ -319,15 +374,30 @@ class DataAggregator:
         if max_decrease_month and (max_decrease_month.pct_change or 0.0) >= 0:
             max_decrease_month = None
 
-        # 4. CUPS-level comparison between earliest and latest year
-        cups_grouped = (
-            filtered_df.groupby([COL_CUPS, COL_YEAR])[COL_CONSUMPTION_KWH].sum().to_dict()
-        )
+        # 6. CUPS-level monthly data for visualization & comparable evaluation
         all_cups = sorted(filtered_df[COL_CUPS].unique().tolist())
+        cups_monthly_grouped = (
+            filtered_df.groupby([COL_CUPS, COL_YEAR, COL_MONTH])[COL_CONSUMPTION_KWH]
+            .sum()
+            .to_dict()
+        )
+
+        cups_monthly_data: dict[str, dict[int, dict[int, float]]] = {}
+        for c in all_cups:
+            cups_monthly_data[c] = {}
+            for y in selected_years:
+                cups_monthly_data[c][y] = {}
+                for m in range(1, 13):
+                    cups_monthly_data[c][y][m] = float(cups_monthly_grouped.get((c, y, m), 0.0))
+
+        # Evaluate CUPS shifts on comparable period if available
+        cups_eval_grouped = (
+            comp_df.groupby([COL_CUPS, COL_YEAR])[COL_CONSUMPTION_KWH].sum().to_dict()
+        )
 
         cups_comparisons: list[CupsComparison] = []
         for c in all_cups:
-            c_yearly = {y: float(cups_grouped.get((c, y), 0.0)) for y in selected_years}
+            c_yearly = {y: float(cups_eval_grouped.get((c, y), 0.0)) for y in selected_years}
             c_base = c_yearly[earliest_year]
             c_target = c_yearly[latest_year]
             c_diff = c_target - c_base
@@ -338,6 +408,7 @@ class DataAggregator:
                     yearly_kwh=c_yearly,
                     diff_kwh=c_diff,
                     pct_change=c_pct,
+                    monthly_kwh=cups_monthly_data[c],
                 )
             )
 
@@ -355,6 +426,9 @@ class DataAggregator:
             years=selected_years,
             monthly_comparisons=monthly_comparisons,
             annual_totals=annual_totals,
+            comparable_annual_totals=comparable_annual_totals,
+            comparable_months=comparable_months,
+            excluded_months=excluded_months,
             total_diff_kwh=total_diff_kwh,
             total_pct_change=total_pct_change,
             max_increase_month=max_increase_month,
@@ -362,4 +436,5 @@ class DataAggregator:
             top_saving_cups=top_saving_cups,
             top_increasing_cups=top_increasing_cups,
             cups_comparisons=cups_comparisons,
+            cups_monthly_data=cups_monthly_data,
         )

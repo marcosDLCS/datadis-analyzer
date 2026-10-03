@@ -25,8 +25,11 @@ def test_compare_years_default_all_years(sample_input_hierarchy: Path) -> None:
     assert comparison.years == [2024, 2025]
     assert comparison.annual_totals[2024] == 100.0
     assert comparison.annual_totals[2025] == 100.0
-    assert comparison.total_diff_kwh == 0.0
-    assert comparison.total_pct_change == 0.0
+    # Because months in sample_input_hierarchy are incomplete / non-overlapping, comparable_months is empty
+    assert comparison.comparable_months == []
+    assert comparison.excluded_months == [1, 5, 6]
+    assert comparison.total_diff_kwh is None
+    assert comparison.total_pct_change is None
 
     # Verify monthly comparisons (months 1, 5, 6 have data)
     months = {m.month: m for m in comparison.monthly_comparisons}
@@ -34,16 +37,19 @@ def test_compare_years_default_all_years(sample_input_hierarchy: Path) -> None:
     assert 5 in months
     assert 6 in months
 
-    # Month 1 (Jan): 2024 had 0 kWh, 2025 had 100 kWh
-    assert months[1].yearly_kwh[2024] == 0.0
-    assert months[1].yearly_kwh[2025] == 100.0
-    assert months[1].diff_kwh == 100.0
+    # Month 1 (Jan): 2024 had no data, 2025 had incomplete data (1 day)
+    assert months[1].is_complete is False
+    assert months[1].year_status[2024] == "no_data"
+    assert months[1].year_status[2025] == "incomplete"
+    assert months[1].diff_kwh is None
+    assert months[1].pct_change is None
 
-    # Month 5 (May): 2024 had 40 kWh, 2025 had 0 kWh
-    assert months[5].yearly_kwh[2024] == 40.0
-    assert months[5].yearly_kwh[2025] == 0.0
-    assert months[5].diff_kwh == -40.0
-    assert months[5].pct_change == -100.0
+    # Month 5 (May): 2024 had incomplete data, 2025 had no data
+    assert months[5].is_complete is False
+    assert months[5].year_status[2024] == "incomplete"
+    assert months[5].year_status[2025] == "no_data"
+    assert months[5].diff_kwh is None
+    assert months[5].pct_change is None
 
 
 def test_compare_years_explicit_target_years(sample_input_hierarchy: Path) -> None:
@@ -186,3 +192,82 @@ def test_export_comparison_markdown_direct(sample_input_hierarchy: Path, tmp_pat
     content = report_file.read_text(encoding="utf-8")
     assert "Comparativa Energética Interanual" in content
     assert "Resumen Ejecutivo" in content
+
+
+def test_compare_complete_month_calculation(tmp_path: Path) -> None:
+    """When a month has all calendar days recorded in all compared years, it must be marked complete and compared."""
+    input_dir = tmp_path / "complete_input"
+    dir_2024 = input_dir / "2024"
+    dir_2025 = input_dir / "2025"
+    dir_2024.mkdir(parents=True)
+    dir_2025.mkdir(parents=True)
+
+    # Generate 28 days for Feb in 2025 and 29 days in 2024
+    lines_2024 = ["cups;fecha;hora;consumo_kWh"]
+    for day in range(1, 30):
+        lines_2024.append(f'"ES0021000000000001AA";"2024/02/{day:02d}";"12:00";"1,00"')
+    (dir_2024 / "feb_2024.csv").write_text("\n".join(lines_2024) + "\n", encoding="utf-8")
+
+    lines_2025 = ["cups;fecha;hora;consumo_kWh"]
+    for day in range(1, 29):
+        lines_2025.append(f'"ES0021000000000001AA";"2025/02/{day:02d}";"12:00";"2,00"')
+    (dir_2025 / "feb_2025.csv").write_text("\n".join(lines_2025) + "\n", encoding="utf-8")
+
+    loader = DatadisLoader()
+    df, _ = loader.load_all(input_dir)
+    comparison = DataAggregator.compare_years(df)
+
+    assert comparison.years == [2024, 2025]
+    assert comparison.comparable_months == [2]
+    assert len(comparison.monthly_comparisons) == 1
+    m2 = comparison.monthly_comparisons[0]
+    assert m2.month == 2
+    assert m2.is_complete is True
+    assert m2.yearly_kwh[2024] == 29.0
+    assert m2.yearly_kwh[2025] == 56.0
+    assert m2.diff_kwh == 27.0
+    assert m2.pct_change is not None and round(m2.pct_change, 1) == 93.1
+    assert comparison.total_diff_kwh == 27.0
+
+
+def test_charts_generation_and_export(sample_input_hierarchy: Path, tmp_path: Path) -> None:
+    """generate_all_comparison_charts must produce community and CUPS png images."""
+    from src.presentation.charts import generate_all_comparison_charts
+
+    loader = DatadisLoader()
+    df, _ = loader.load_all(sample_input_hierarchy)
+    comparison = DataAggregator.compare_years(df)
+
+    out_dir = tmp_path / "charts_out"
+    chart_files = generate_all_comparison_charts(comparison, out_dir, lang="en")
+
+    # Community chart + 2 CUPS = 3 charts
+    assert len(chart_files) == 3
+    for cf in chart_files:
+        assert cf.exists()
+        assert cf.stat().st_size > 0
+        assert cf.suffix == ".png"
+
+    # Export markdown and verify images are referenced
+    report = export_comparison_markdown(
+        comparison,
+        output_dir=out_dir,
+        lang="en",
+        chart_paths=chart_files,
+    )
+    content = report.read_text(encoding="utf-8")
+    assert "community_monthly_2024_2025.png" in content
+    assert "cups_ES0021000000000001AA_2024_2025.png" in content
+    assert "cups_ES0021000000000002BB_2024_2025.png" in content
+
+
+def test_cli_compare_no_charts_flag(sample_input_hierarchy: Path, tmp_path: Path) -> None:
+    """The 'da compare --no-charts' flag should skip chart generation."""
+    out_dir = tmp_path / "no_charts_out"
+    result = runner.invoke(
+        app,
+        ["compare", "-i", str(sample_input_hierarchy), "-o", str(out_dir), "--no-charts"],
+    )
+    assert result.exit_code == 0
+    charts_dir = out_dir / "charts"
+    assert not charts_dir.exists()

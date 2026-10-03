@@ -167,11 +167,14 @@ da summary --input-dir /path/to/input   # Custom input directory
 
 ### 🔄 Multi-Year Comparison (`da compare`)
 ```bash
-da compare              # Compare all years found in ./.input/ + markdown export
+da compare              # Compare all years in ./.input/, auto-generate bar charts & export report
 da compare -y 2024 -y 2025  # Compare specific years
 da compare --years 2024,2025 # Comma-separated year selection
+da compare --no-charts  # Skip PNG bar chart generation
 da compare --lang es    # Render comparison in Spanish
 ```
+- **Incomplete Month Handling:** Automatically detects incomplete or missing months. Incomplete months display "No data" and are excluded from delta and trend calculations for honest, apples-to-apples comparisons.
+- **Visual Bar Charts:** Generates high-resolution grouped bar charts for every CUPS (X: Month, Y: Consumption kWh, one bar per year) and embeds them directly into the generated Markdown report.
 
 ### 🧹 Output Cleanup (`da cleanup` / `da clean`)
 ```bash
@@ -186,7 +189,7 @@ da cleanup --output-dir /path/to/output -f # Clean custom output directory
 ## 🧪 Quality Assurance & Tooling
 
 ```bash
-# Run test suite (56 automated tests)
+# Run test suite (59 automated tests)
 pytest -v
 
 # Run Ruff linter and code formatter

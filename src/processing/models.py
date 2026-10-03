@@ -1,6 +1,6 @@
 """Domain models and data structures for aggregated DATADIS energy consumption metrics."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -107,15 +107,21 @@ class MonthComparison:
 
     Attributes:
         month: Calendar month (1-12).
-        yearly_kwh: Mapping of year to community total kWh for this month.
-        diff_kwh: Difference between target (latest) and base (earliest) year.
-        pct_change: Percentage change between base and target year (None if base is zero).
+        yearly_kwh: Mapping of year to community total kWh for this month (or None if no data).
+        diff_kwh: Difference between target (latest) and base (earliest) year (None if incomplete/missing).
+        pct_change: Percentage change between base and target year (None if incomplete or base is zero).
+        is_complete: True if ALL compared years have full data covering all days of that calendar month.
+        year_status: Mapping of year to status string ('complete', 'incomplete', 'no_data').
+        year_days: Mapping of year to tuple of (actual_days_with_data, expected_days_in_month).
     """
 
     month: int
-    yearly_kwh: dict[int, float]
-    diff_kwh: float
+    yearly_kwh: dict[int, float | None]
+    diff_kwh: float | None
     pct_change: float | None
+    is_complete: bool = True
+    year_status: dict[int, str] = field(default_factory=dict)
+    year_days: dict[int, tuple[int, int]] = field(default_factory=dict)
 
 
 @dataclass
@@ -124,15 +130,17 @@ class CupsComparison:
 
     Attributes:
         cups: Universal Supply Point Code.
-        yearly_kwh: Mapping of year to annual consumption.
+        yearly_kwh: Mapping of year to consumption over comparable periods.
         diff_kwh: Consumption difference between target (latest) and base (earliest) year.
         pct_change: Percentage change between base and target year (None if base is zero).
+        monthly_kwh: Mapping of year -> month -> consumption kWh for this CUPS.
     """
 
     cups: str
     yearly_kwh: dict[int, float]
     diff_kwh: float
     pct_change: float | None
+    monthly_kwh: dict[int, dict[int, float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -142,23 +150,31 @@ class ComparisonSummary:
     Attributes:
         years: Sorted list of calendar years being compared.
         monthly_comparisons: Comparison for each month with recorded data.
-        annual_totals: Total community consumption per year.
-        total_diff_kwh: Net community consumption difference between latest and earliest year.
-        total_pct_change: Overall percentage variation.
-        max_increase_month: Month with the highest consumption increase (if any).
-        max_decrease_month: Month with the highest consumption decrease (if any).
-        top_saving_cups: CUPS with the largest kWh reduction.
-        top_increasing_cups: CUPS with the largest kWh increase.
-        cups_comparisons: Full list of individual CUPS comparisons sorted by kWh change.
+        annual_totals: Total community consumption per year (all recorded data).
+        comparable_annual_totals: Community consumption per year restricted to complete months.
+        comparable_months: Sorted list of months that have complete data across all compared years.
+        excluded_months: Sorted list of months excluded from comparison due to missing/incomplete data.
+        total_diff_kwh: Net community consumption difference over comparable months.
+        total_pct_change: Overall percentage variation over comparable months.
+        max_increase_month: Month with highest consumption increase among complete months.
+        max_decrease_month: Month with highest consumption decrease among complete months.
+        top_saving_cups: CUPS with largest kWh reduction over comparable months.
+        top_increasing_cups: CUPS with largest kWh increase over comparable months.
+        cups_comparisons: Full list of individual CUPS comparisons over comparable months.
+        cups_monthly_data: Nested mapping: cups -> year -> month -> kWh.
     """
 
     years: list[int]
     monthly_comparisons: list[MonthComparison]
     annual_totals: dict[int, float]
-    total_diff_kwh: float
+    comparable_annual_totals: dict[int, float]
+    comparable_months: list[int]
+    excluded_months: list[int]
+    total_diff_kwh: float | None
     total_pct_change: float | None
     max_increase_month: MonthComparison | None
     max_decrease_month: MonthComparison | None
     top_saving_cups: CupsComparison | None
     top_increasing_cups: CupsComparison | None
     cups_comparisons: list[CupsComparison]
+    cups_monthly_data: dict[str, dict[int, dict[int, float]]] = field(default_factory=dict)

@@ -17,6 +17,7 @@ from src.config import (
 from src.i18n import t
 from src.ingestion.loader import DatadisLoader
 from src.ingestion.schema import DatadisError
+from src.presentation.charts import generate_all_comparison_charts
 from src.presentation.console import console
 from src.presentation.export import (
     cleanup_output_directory,
@@ -213,6 +214,11 @@ def compare_cmd(
         "-l",
         help="Temporary language override for this command ('en' or 'es').",
     ),
+    charts: bool = typer.Option(
+        True,
+        "--charts/--no-charts",
+        help="Generate visual monthly comparison bar charts for each CUPS and community (default: True).",
+    ),
 ) -> None:
     """Compare energy consumption across different years, showing monthly deltas, percentage variations, and insights."""
     effective_lang = lang or get_language()
@@ -279,13 +285,35 @@ def compare_cmd(
     # 4. CUPS-level shifts table
     render_cups_comparison_table(comparison, lang=effective_lang)
 
-    # 5. Export markdown report
+    # 5. Visual bar charts generation
+    chart_files: list[Path] = []
+    if charts:
+        charts_loading_msg = (
+            "[bold cyan]Generando gráficos comparativos mensuales por CUPS...[/bold cyan]"
+            if effective_lang == "es"
+            else "[bold cyan]Generating monthly comparison bar charts for all CUPS...[/bold cyan]"
+        )
+        with console.status(charts_loading_msg, spinner="dots"):
+            chart_files = generate_all_comparison_charts(
+                comparison=comparison,
+                output_dir=target_output_dir,
+                lang=effective_lang,
+            )
+
+    # 6. Export markdown report
     report_file = export_comparison_markdown(
         comparison=comparison,
         output_dir=target_output_dir,
         lang=effective_lang,
+        chart_paths=chart_files,
     )
     render_export_success(report_file, lang=effective_lang)
+
+    if chart_files:
+        charts_dir_rel = target_output_dir / "charts"
+        console.print(
+            f"[bold green]✔[/bold green] {t('charts_generated', lang=effective_lang, count=len(chart_files), path=str(charts_dir_rel))}\n"
+        )
 
 
 @app.command(name="summary")
