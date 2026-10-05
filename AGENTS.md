@@ -52,6 +52,7 @@ datadis-analyzer/
 │   ├── cli.py                  # Typer CLI application and command dispatch
 │   ├── config.py / i18n.py     # Configuration, path resolution, and translations
 │   ├── version.py              # CalVer version management and pre-commit enforcer
+│   ├── security.py             # Security audit and zero-leakage CUPS privacy engine
 │   ├── ingestion/              # Delimiter detection, validation, and Pandas loader
 │   ├── processing/             # Aggregation engine, domain models, and share math
 │   └── presentation/           # Rich console UI, views, and Markdown exporter
@@ -101,6 +102,7 @@ ruff check --fix .        # Lint and auto-fix code
 ruff format .             # Format code
 python -m src.version check # Validate version consistency
 python -m src.version bump  # Bump version before committing
+python -m src.security    # Audit repository for privacy & secret leaks
 pre-commit run --all-files # Run all git hooks
 ```
 
@@ -126,7 +128,7 @@ pre-commit run --all-files # Run all git hooks
 
 ## 6. 🤖 Directives for Autonomous AI Agents
 
-- **🛡️ Directive 1: Anonymization is Absolute.** Never commit or log real DATADIS CUPS, contract numbers, or real residential datasets. Use synthetic mock identifiers (`ES0021000000000001AA`, `ES0021000000000002BB`).
+- **🛡️ Directive 1: Anonymization is Absolute.** Never commit or log real DATADIS CUPS, contract numbers, or real residential datasets. Use synthetic mock identifiers (`ES0021000000000001AA`, `ES0021000000000002BB`). Enforced by pre-commit hook and `python -m src.security`.
 - **🌐 Directive 2: Universal English Codebase.** Write all code, comments, docstrings, test names, CLI messages, and commit messages entirely in **English**.
 - **🎯 Directive 3: Strict Modern Typing.** Use strict type hints (`typing`, native union syntax `X | Y`) on all function signatures, dataclasses, and class methods. Avoid bare `Any`.
 - **🚨 Directive 4: Domain Exceptions.** Use custom domain exceptions from `src.ingestion.schema` (`DatadisError`, `DatadisValidationError`, `DatadisParseError`). Handle errors gracefully without uncaught stack traces.

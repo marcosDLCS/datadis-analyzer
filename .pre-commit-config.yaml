@@ -26,3 +26,8 @@ repos:
         entry: python3 -m src.version hook
         language: system
         pass_filenames: false
+      - id: security-audit
+        name: Security & Privacy Audit
+        entry: python3 -m src.security hook
+        language: system
+        pass_filenames: false
