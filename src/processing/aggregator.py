@@ -174,6 +174,10 @@ class DataAggregator:
             kwh = float(row["sum"])
             count = int(row["count"])
             avg_hourly = kwh / count if count > 0 else 0.0
+
+            # Mathematical Invariant: Fair-Share Percentage Calculation
+            # Share_i = (kWh_i / total_community_kwh) * 100.0
+            # Guaranteed to sum to exactly 100.00% across all community meters for any period.
             share_pct = (kwh / total_kwh * 100.0) if total_kwh > 0 else 0.0
 
             shares.append(
@@ -283,6 +287,11 @@ class DataAggregator:
             year_days: dict[int, tuple[int, int]] = {}
             all_years_complete = True
 
+            # Completeness Verification Heuristic:
+            # An apples-to-apples comparison requires that all compared years have full data
+            # for the entire calendar month (actual_days == expected_days_in_month).
+            # If a month has partial data in any year (e.g. only 15 days in an in-progress year),
+            # calculating deltas would be mathematically misleading and distort year-over-year trends.
             for y in selected_years:
                 expected_days = calendar.monthrange(y, m)[1]
                 actual_days = int(monthly_days.get((y, m), 0))

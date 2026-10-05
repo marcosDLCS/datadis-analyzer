@@ -214,7 +214,11 @@ pre-commit run --all-files
 
 ---
 
-## 🤝 Contributing & License
+## 🤝 Documentation, Contributing & License
+
+For in-depth operational and architectural details, please explore our guides:
+- 📘 [Operational Architecture Guide (English)](docs/GUIDE_EN.md) — Comprehensive guide to ingestion, heuristics, math invariants, and outputs.
+- 🇪🇸 [Guía de Arquitectura y Operación (Español)](docs/GUIDE_ES.md) — Guía completa sobre el canal de ingesta, cálculo de reparto, heurísticas y salidas.
 
 Contributions are welcome. Please consult:
 - 📘 [CONTRIBUTING.md](CONTRIBUTING.md) — Coding conventions, Conventional Commits specification, and PR workflow.

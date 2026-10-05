@@ -142,6 +142,8 @@ pre-commit run --all-files # Run all git hooks
 
 ## 7. 📚 Related Documentation
 
+- 📘 [Operational Guide (English)](docs/GUIDE_EN.md) — Comprehensive technical architecture, ingestion pipeline, math invariants, and outputs.
+- 🇪🇸 [Guía Operativa (Español)](docs/GUIDE_ES.md) — Arquitectura técnica, canal de ingesta, cálculo de reparto y salidas.
 - 📖 [README.md](README.md) — User setup, command reference, and visual overview.
 - 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — Open-source contribution guidelines, coding standards, and PR workflows.
 - 📄 [LICENSE](LICENSE) — Full MIT open-source license text.

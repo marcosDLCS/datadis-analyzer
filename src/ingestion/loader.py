@@ -86,17 +86,20 @@ class DatadisLoader:
             )
 
         try:
-            # Read CSV using detected delimiter and encoding
+            # 1. Ingestion Step: Read CSV using detected delimiter and encoding.
+            # We load all columns as strings (dtype=str) to avoid premature float truncation
+            # and to safely preprocess European comma decimals (e.g. '1,500' -> 1.500).
             df = pd.read_csv(
                 file_path,
                 sep=validation.delimiter,
                 encoding=validation.encoding,
                 quotechar='"',
-                dtype=str,  # Read all as string initially to safely clean decimals and whitespace
+                dtype=str,
                 skipinitialspace=True,
             )
 
-            # Standardize header names (case-insensitive mapping)
+            # 2. Header Normalization: Standardize variations to canonical column names
+            # (e.g., handles 'consumo_kwh' vs 'consumoKwh' regardless of casing).
             col_map: dict[str, str] = {}
             for col in df.columns:
                 cleaned = col.strip().strip('"').strip("'")
@@ -112,11 +115,12 @@ class DatadisLoader:
 
             df = df.rename(columns=col_map)
 
-            # Strip whitespace and quotes from string columns
+            # Clean whitespace and lingering quotes from identifiers and timestamps
             df[COL_CUPS] = df[COL_CUPS].astype(str).str.strip().str.strip('"').str.strip("'")
             df[COL_TIME] = df[COL_TIME].astype(str).str.strip().str.strip('"').str.strip("'")
 
-            # Parse consumption values handling European comma decimals (e.g., '0,152')
+            # 3. Numeric Normalization: Convert European comma decimals to standard floating point.
+            # Missing or malformed values are safely imputed as 0.0 kWh.
             consumption_raw = (
                 df[COL_CONSUMPTION_KWH]
                 .astype(str)
@@ -126,7 +130,8 @@ class DatadisLoader:
             )
             df[COL_CONSUMPTION_KWH] = pd.to_numeric(consumption_raw, errors="coerce").fillna(0.0)
 
-            # Parse date strings (supports YYYY/MM/DD, YYYY-MM-DD, DD/MM/YYYY, etc.)
+            # 4. Temporal Parsing: Parse dates with format="mixed" to seamlessly accept
+            # both Spanish (DD/MM/YYYY) and ISO (YYYY-MM-DD or YYYY/MM/DD) formats.
             date_raw = df[COL_DATE].astype(str).str.strip().str.strip('"')
             parsed_dates = pd.to_datetime(date_raw, format="mixed", errors="coerce")
 
@@ -135,11 +140,12 @@ class DatadisLoader:
                     f"Could not parse any valid dates from 'fecha' in {file_path.name}"
                 )
 
+            # Extract calendar year and month for efficient vectorized grouping
             df[COL_DATE] = parsed_dates
             df[COL_YEAR] = df[COL_DATE].dt.year.astype(int)
             df[COL_MONTH] = df[COL_DATE].dt.month.astype(int)
 
-            # Keep essential columns
+            # Retain only required schema columns
             keep_cols = [COL_CUPS, COL_DATE, COL_YEAR, COL_MONTH, COL_TIME, COL_CONSUMPTION_KWH]
             return df[keep_cols]
 
