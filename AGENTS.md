@@ -18,46 +18,20 @@
 - **🧮 Fair-Share Math:** Calculate exact percentage shares per CUPS for months and years (guaranteed 100.00% sum).
 - **📊 Rich Terminal UI:** Render tables, metric cards, percentage bars, and consumption alerts (`★` dominant, `(0)` inactive).
 - **⚙️ Configuration Persistence:** Maintain language preferences (`en`/`es`) and paths in `.da_config.json`.
-- **📝 Automated Reporting:** Export timestamped Markdown summaries to `.output/YYYYMMDD_HHMMSS_*.md`.
+- **📝 Automated Reporting:** Export timestamped Markdown summaries to `.output/YYYYMMDD_HHMMSS_*.md` with Matplotlib comparison charts.
 
 ---
 
 ## 2. 🧩 Architecture & Component Boundaries
 
-```mermaid
-graph TD
-    CLI["🎮 src/cli.py\n(Typer Commands & Flags)"] --> CFG["⚙️ src/config.py\n(AppConfig & Path Resolution)"]
-    CLI --> VER["🏷️ src/version.py\n(CalVer Versioning Engine)"]
-    CLI --> LOD["📥 src/ingestion/loader.py\n(Discovery & Pandas Normalizer)"]
-    LOD --> VAL["🔍 src/ingestion/validator.py\n(Delimiter / Encoding / Schema)"]
-    CLI --> AGG["🧮 src/processing/aggregator.py\n(Period Grouping & Math)"]
-    AGG --> MOD["📦 src/processing/models.py\n(CommunitySummary, CupsShare)"]
-    CLI --> VIEW["🖥️ src/presentation/views.py\n(Rich Tables, Panels & Bars)"]
-    CLI --> EXP["📝 src/presentation/export.py\n(Markdown Report Exporter)"]
-    CLI --> I18N["🌐 src/i18n.py\n(English & Spanish Engine)"]
-```
-
-### File Hierarchy
-```text
-datadis-analyzer/
-├── pyproject.toml              # Build config, CLI entry point (da), Ruff config
-├── requirements.txt            # Core and test dependency manifest
-├── LICENSE                     # Standard MIT open-source license
-├── README.md / AGENTS.md       # User guide and agent directives
-├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits
-├── .pre-commit-config.yaml     # Git hook definitions (Ruff linter, formatter, CalVer)
-├── .da_config.json             # Persistent application configuration
-├── .input/ / .output/          # Raw input CSVs (.input/<year>/) and generated reports
-├── src/
-│   ├── cli.py                  # Typer CLI application and command dispatch
-│   ├── config.py / i18n.py     # Configuration, path resolution, and translations
-│   ├── version.py              # CalVer version management and pre-commit enforcer
-│   ├── security.py             # Security audit and zero-leakage CUPS privacy engine
-│   ├── ingestion/              # Delimiter detection, validation, and Pandas loader
-│   ├── processing/             # Aggregation engine, domain models, and share math
-│   └── presentation/           # Rich console UI, views, and Markdown exporter
-└── tests/                      # Automated unit, integration, and CLI test suite
-```
+The codebase follows a modular pipeline across distinct component boundaries:
+- **`src/cli.py`:** Typer entry point and command dispatch (`init`, `summary`, `compare`, `cleanup`, `version`, `help`).
+- **`src/config.py` & `src/i18n.py`:** Persistent settings (`.da_config.json`), paths, and English/Spanish localization.
+- **`src/version.py`:** CalVer management engine (`YYYY.MM.NNN`) and pre-commit version validator.
+- **`src/security.py`:** Zero-leakage privacy auditor, synthetic CUPS whitelist, and credential scanner.
+- **`src/ingestion/`:** Delimiter/encoding detection (`validator.py`) and vectorized Pandas normalization (`loader.py`).
+- **`src/processing/`:** Aggregation engine, calendar completeness logic (`aggregator.py`), and dataclasses (`models.py`).
+- **`src/presentation/`:** Rich terminal UI (`views.py`), Matplotlib chart generator (`charts.py`), and Markdown exporter (`export.py`).
 
 ---
 
@@ -66,8 +40,8 @@ datadis-analyzer/
 | Component | Technology | Standard / Role |
 | :--- | :--- | :--- |
 | **Runtime** | Python 3.11+ | Modern typing, native union types (`X \| Y`) |
-| **CLI & UI** | Typer & Rich | Command-line parser, 80-column tables, visual bars |
-| **Data Engine** | Pandas | CSV normalization, time-series aggregation |
+| **CLI & UI** | Typer & Rich | Command parser, 80-column tables, visual bars |
+| **Data & Charts** | Pandas & Matplotlib | CSV normalization, time-series grouping, headless PNG charts |
 | **Versioning** | CalVer (`YYYY.MM.NNN`) | Automated per-commit version increments |
 | **Quality** | Ruff & Pre-commit | Linter, code formatter, git hook enforcement |
 | **Testing** | Pytest | Unit and integration test coverage |
@@ -92,7 +66,7 @@ da summary --cups <CUPS>  # Inspect specific CUPS trajectory
 da compare [-y YYYY ...]  # Multi-year consumption comparison, trends & export
 da cleanup [-f]           # Clear generated reports from .output/
 da help                   # Interactive manual
-da version              # Display active application version
+da version                # Display active application version
 ```
 
 ### Testing & Quality Checks
@@ -112,17 +86,13 @@ pre-commit run --all-files # Run all git hooks
 
 1. **Annualized Folder Layout:** Input CSV files reside in `./.input/<year>/` (e.g., `./.input/2025/*.csv`).
 2. **Community Scope:** All CUPS in the input directory belong to the same residential community (*comunidad de vecinos*).
-3. **DATADIS CSV Format:**
-   - Standard columns: `cups`, `fecha` (`YYYY/MM/DD` or `YYYY-MM-DD`), `hora` (`01:00`–`24:00`), `consumo_kWh`.
-   - Delimiters: `;` or `,`. Decimal separators: `,` or `.`.
+3. **DATADIS CSV Format:** Required columns: `cups`, `fecha` (`YYYY/MM/DD` or `YYYY-MM-DD`), `hora` (`01:00`–`24:00`), `consumo_kWh`. Delimiters: `;` or `,`. Decimals: `,` or `.`.
 4. **The 100.00% Share Invariant:**
    $$\text{Share}_i = \frac{\sum_{t \in T} \text{kWh}_{i, t}}{\sum_{j} \sum_{t \in T} \text{kWh}_{j, t}} \times 100$$
    The sum of shares across all community CUPS for any period must equal $100.00\%$.
-5. **Special CUPS Classification:**
-   - Dominant consumer (`★`): >30% of total consumption (e.g., community HVAC/pumps).
-   - Inactive supply (`(0)`): <1 kWh total consumption.
-6. **Mandatory Workspace Initialization Invariant:** `da init` must be successfully run before executing `da summary`, `da compare`, or `da cleanup`. The command records the `initialized_at` timestamp and active CalVer `version` in `.da_config.json`.
-7. **CalVer Pattern Invariant:** The version string adheres strictly to `<year>.<month>.<incremental number (3 positions)>` (e.g. `2026.10.001`). The version appears in the console banner, during `da init`, and in all generated markdown reports.
+5. **Special CUPS Classification:** Dominant consumer (`★`): >30% of total consumption (e.g., central HVAC/pumps). Inactive supply (`(0)`): <1 kWh total consumption.
+6. **Mandatory Workspace Initialization:** `da init` must be successfully run before executing `da summary`, `da compare`, or `da cleanup`. The command records `initialized_at` and CalVer `version` in `.da_config.json`.
+7. **CalVer Pattern Invariant:** The version string adheres strictly to `<year>.<month>.<incremental number (3 positions)>` (e.g., `2026.10.001`), displayed in banners, `da init`, and reports.
 
 ---
 
@@ -135,15 +105,15 @@ pre-commit run --all-files # Run all git hooks
 - **🖥️ Directive 5: The 80-Column Terminal Rule.** Rich tables must render cleanly on standard **80-column terminals**. Set `no_wrap=True` on numeric, percentage, and CUPS columns.
 - **🧪 Directive 6: Test Completeness.** Any new calculation logic, CLI flag, or validation rule must include automated unit tests in `tests/`. Always run `pytest` before finalizing tasks.
 - **🧹 Directive 7: Ruff & Pre-Commit Adherence.** Run `ruff check --fix .` and `ruff format .` before committing changes. Git pre-commit hooks will automatically reject non-compliant commits.
-- **📝 Directive 8: Conventional Commits.** Adhere strictly to the Conventional Commits specification documented in [CONTRIBUTING.md](CONTRIBUTING.md).
-- **🏷️ Directive 9: CalVer Increments on Every Commit.** Every commit must increment the CalVer sequence (`python -m src.version bump`) so that each commit has a distinct version in `src/version.py` and `pyproject.toml`. Pre-commit hooks will enforce version validity.
+- **📝 Directive 8: Conventional Commits.** Adhere strictly to Conventional Commits format (`<type>(<scope>): <desc>`).
+- **🏷️ Directive 9: CalVer Increments on Every Commit.** Every commit must increment the CalVer sequence (`python -m src.version bump`) so that each commit has a distinct version in `src/version.py` and `pyproject.toml`. Pre-commit hooks enforce version validity.
 
 ---
 
 ## 7. 📚 Related Documentation
 
-- 📘 [Operational Guide (English)](docs/GUIDE_EN.md) — Comprehensive technical architecture, ingestion pipeline, math invariants, and outputs.
+- 📘 [Operational Guide (English)](docs/GUIDE_EN.md) — Technical architecture, ingestion pipeline, math invariants, and outputs.
 - 🇪🇸 [Guía Operativa (Español)](docs/GUIDE_ES.md) — Arquitectura técnica, canal de ingesta, cálculo de reparto y salidas.
 - 📖 [README.md](README.md) — User setup, command reference, and visual overview.
-- 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — Open-source contribution guidelines, coding standards, and PR workflows.
+- 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines, coding standards, and PR workflows.
 - 📄 [LICENSE](LICENSE) — Full MIT open-source license text.

@@ -14,34 +14,21 @@
 
 ## 🚀 Key Capabilities
 
-- **🔍 Multi-Dialect CSV Ingestion:** Automatically detects delimiters (`;`, `,`, `\t`), decimal notations (`0,152` vs `0.152`), character encodings (`utf-8`, `utf-8-sig`, `latin-1`, `cp1252`), and date formats (`YYYY/MM/DD`, `YYYY-MM-DD`).
-- **🧮 Exact Fair-Share Math:** Calculates each supply point's (CUPS) percentage share of collective community consumption across months and years, guaranteed to sum to exactly 100.00%.
-- **📊 Rich Terminal Visualizations:** Renders interactive tables, metric overview cards, inline percentage bars (`████████░░`), and alerts for dominant (`★`) or inactive (`(0)`) meters.
-- **🏷️ Automated CalVer Versioning:** Increments release version on every commit following `<year>.<month>.<incremental number>` (e.g., `2026.10.001`), displayed in console banners, initialization cards, and markdown exports.
-- **🌐 Dual-Language Support:** Full English (`en`) and Spanish (`es`) localization, persisted across commands via `.da_config.json`.
-- **📝 Automated Markdown Reporting:** Exports timestamped reports directly into `.output/YYYYMMDD_HHMMSS_*.md`.
+- **🔍 Multi-Dialect CSV Ingestion:** Auto-detects delimiters (`;`, `,`, `\t`), decimal formats (`0,152` vs `0.152`), encodings (`utf-8`, `utf-8-sig`, `latin-1`, `cp1252`), and dates (`YYYY/MM/DD`, `YYYY-MM-DD`).
+- **🧮 Exact Fair-Share Math:** Calculates each supply point's (CUPS) percentage share of collective community energy across months and years (guaranteed 100.00% sum).
+- **📊 Rich Terminal Visualizations:** Displays interactive tables, metric cards, inline percentage bars (`████░░`), and alerts for dominant (`★`) or inactive (`(0)`) meters.
+- **🏷️ Automated CalVer Versioning:** Increments release version on every commit (`YYYY.MM.NNN`), shown in banners, init cards, and reports.
+- **🌐 Dual-Language Support:** English (`en`) and Spanish (`es`) localization, persisted in `.da_config.json`.
+- **📝 Automated Reporting & Charts:** Exports timestamped Markdown reports to `.output/` with embedded high-resolution Matplotlib comparison charts.
 
 ---
 
 ## 🏗️ Architecture & Data Flow
 
-```mermaid
-flowchart LR
-    subgraph Ingestion ["📥 Ingestion & Validation"]
-        CSV["📁 .input/<year>/*.csv\n(Auto-detect dialects)"] --> VAL["🔍 DatadisValidator\n(Schema & encoding checks)"]
-        VAL --> NORM["🧹 DatadisLoader\n(Pandas normalization)"]
-    end
-
-    subgraph Processing ["⚙️ Processing Core"]
-        NORM --> AGG["🧮 DataAggregator\n(Monthly / Annual grouping)"]
-        AGG --> MATH["📐 Share Engine\n(Σ shares = 100.00%)"]
-    end
-
-    subgraph Presentation ["📊 Presentation & Export"]
-        MATH --> RICH["✨ Rich Terminal UI\n(Tables, Bars, Insights)"]
-        MATH --> EXP["📝 Markdown Reports\n(.output/YYYYMMDD_HHMMSS_*.md)"]
-    end
-```
+Data flows unidirectionally across three core layers:
+1. **Ingestion & Validation:** Discovers raw CSV files in `./.input/<year>/`, sniffs encodings and dialects via `DatadisValidator`, and normalizes schemas into Pandas DataFrames via `DatadisLoader`.
+2. **Processing Core:** Groups time-series readings, evaluates calendar completeness for honest multi-year comparisons, and computes exact fair-share percentages via `DataAggregator`.
+3. **Presentation & Export:** Renders 80-column Rich terminal views (`views.py`), generates Matplotlib comparison bar charts (`charts.py`), and exports timestamped Markdown summaries (`export.py`).
 
 ---
 
@@ -69,49 +56,18 @@ Legend: ★ Dominant Consumer (>30% of total)  |  (0) Inactive supply (<1 kWh)
 
 ---
 
-## 📁 Repository Layout
-
-```text
-datadis-analyzer/
-├── pyproject.toml              # Build config, dependencies, and CLI entry point (da)
-├── requirements.txt            # Package dependencies manifest
-├── LICENSE                     # Standard MIT license
-├── README.md                   # User documentation and guide
-├── AGENTS.md                   # Agent and technical developer directives
-├── CONTRIBUTING.md             # Contribution guidelines & Conventional Commits
-├── .pre-commit-config.yaml     # Pre-commit hook definitions (Ruff linter & formatter)
-├── .da_config.json             # Persistent application configuration
-├── .input/                     # Annualized raw CSV files (.input/<year>/*.csv)
-├── .output/                    # Auto-generated markdown reports & archives
-├── src/
-│   ├── cli.py                  # Typer CLI application and command handlers
-│   ├── config.py               # Constants, column definitions, and path helpers
-│   ├── i18n.py                 # Multi-language translation engine (en/es)
-│   ├── ingestion/              # Delimiter detection, validation, and Pandas loader
-│   ├── processing/             # Aggregation engine, domain models, and share math
-│   └── presentation/           # Rich console UI, views, and Markdown exporter
-└── tests/                      # Automated unit, integration, and CLI test suite
-```
-
----
-
 ## 📦 Installation & Setup
 
 ```bash
 # 1. Clone repository & create virtual environment
-git clone git@github.com:marcosDLCS/datadis-analyzer.git
-cd datadis-analyzer
-python3 -m venv .venv
-source .venv/bin/activate
+git clone git@github.com:marcosDLCS/datadis-analyzer.git && cd datadis-analyzer
+python3 -m venv .venv && source .venv/bin/activate
 
-# 2. Install dependencies with development tools
-pip install --upgrade pip
-pip install -e ".[dev]"
-
-# 3. Install git pre-commit hooks
+# 2. Install dependencies with development tools and git hooks
+pip install --upgrade pip && pip install -e ".[dev]"
 pre-commit install
 
-# 4. Initialize workspace directories (.input, .output) and set language
+# 3. Initialize workspace directories (.input, .output) and default language
 da init
 ```
 
@@ -119,25 +75,16 @@ da init
 
 ## 📂 Input Data Conventions
 
-Place DATADIS CSV files into annualized subdirectories inside `./.input/<year>/`:
-
-```text
-.input/
-  ├── 2025/
-  │   ├── ES0021000000000001AA_Consumo_01-01-2025_31-12-2025.csv
-  │   └── ES0021000000000002BB_Consumo_01-01-2025_31-12-2025.csv
-  └── 2026/
-      └── ...
-```
+Place DATADIS CSV files into annualized subdirectories: `./.input/<year>/<CUPS>_Consumo_*.csv`.
 
 > [!IMPORTANT]
-> **Data Privacy:** DATADIS exports contain private household data. Never commit real CUPS files to version control. The `./.input/` directory is ignored by git for privacy.
+> **Data Privacy:** DATADIS exports contain private household data. Never commit real CUPS files to version control. The `./.input/` and `./.output/` directories are permanently git-ignored.
 
-Required columns (semicolon or comma delimited):
+Required CSV columns (semicolon or comma delimited):
 | Column | Description | Example |
 | :--- | :--- | :--- |
 | `cups` | Universal Supply Point Code | `"ES0021000000000001AA"` |
-| `fecha` | Reading date | `"2025/01/15"` |
+| `fecha` | Reading date (`DD/MM/YYYY` or `YYYY-MM-DD`) | `"2025/01/15"` |
 | `hora` | Hour interval (`01:00` to `24:00`) | `"14:00"` |
 | `consumo_kWh` | Interval energy consumption | `"0,152"` or `"0.152"` |
 
@@ -146,16 +93,13 @@ Required columns (semicolon or comma delimited):
 ## 🎮 CLI Usage Manual
 
 > [!IMPORTANT]
-> **Mandatory First Step:** You must run `da init` before executing `da summary`, `da compare`, or `da cleanup`. The initialization records an initialization timestamp in `.da_config.json` and prepares workspace folders.
+> **Mandatory First Step:** You must run `da init` before executing `da summary`, `da compare`, or `da cleanup`. Initialization records a timestamp in `.da_config.json` and prepares workspace folders.
 
 ### ⚙️ Workspace Initialization (`da init`) — *Mandatory*
 ```bash
 da init                 # Interactive language selection and directory initialization
-da init --language es   # Set language to Spanish and mark initialized
-da init -l en           # Set language to English and mark initialized
+da init --language es   # Set language to Spanish (-l en for English)
 ```
-The initialization records the active version and timestamp in `.da_config.json` and prepares workspace folders.
-
 
 ### 🏷️ Version Display (`da version`)
 ```bash
@@ -164,7 +108,7 @@ da version              # Display active CalVer version (e.g., 2026.10.001)
 
 ### 📖 Help & Manual (`da help`)
 ```bash
-da help                 # Display interactive reference manual with version header
+da help                 # Interactive reference manual with command table
 da help --lang es       # Display help in Spanish
 ```
 
@@ -173,26 +117,24 @@ da help --lang es       # Display help in Spanish
 da summary              # Annual & monthly community overview + markdown export
 da summary --year 2025  # Filter to a specific year
 da summary --view monthly # Full month-by-month CUPS breakdown table
-da summary --cups ES0021000000000001AA # Dedicated CUPS trajectory
+da summary --cups ES0021000000000001AA # Dedicated CUPS trajectory view
 da summary --input-dir /path/to/input   # Custom input directory
 ```
 
 ### 🔄 Multi-Year Comparison (`da compare`)
 ```bash
-da compare              # Compare all years in ./.input/, auto-generate bar charts & export report
-da compare -y 2024 -y 2025  # Compare specific years
-da compare --years 2024,2025 # Comma-separated year selection
+da compare              # Compare all years in ./.input/, generate charts & export report
+da compare -y 2024 -y 2025  # Compare specific years (--years 2024,2025 also supported)
 da compare --no-charts  # Skip PNG bar chart generation
 da compare --lang es    # Render comparison in Spanish
 ```
-- **Incomplete Month Handling:** Automatically detects incomplete or missing months. Incomplete months display "No data" and are excluded from delta and trend calculations for honest, apples-to-apples comparisons.
-- **Visual Bar Charts:** Generates high-resolution grouped bar charts for every CUPS (X: Month, Y: Consumption kWh, one bar per year) and embeds them directly into the generated Markdown report.
+- **Incomplete Month Handling:** Incomplete months display `[Inc]` and are excluded from delta/trend calculations for fair comparisons.
+- **Visual Bar Charts:** Generates high-resolution grouped bar charts for the community and each CUPS into `.output/charts/`, embedded in Markdown reports.
 
 ### 🧹 Output Cleanup (`da cleanup` / `da clean`)
 ```bash
 da cleanup              # Interactive cleanup (prompts before deletion)
-da cleanup --force      # Immediate deletion without confirmation
-da clean -f             # Short alias
+da cleanup --force      # Immediate deletion without confirmation (-f alias)
 da cleanup --output-dir /path/to/output -f # Clean custom output directory
 ```
 
@@ -201,41 +143,27 @@ da cleanup --output-dir /path/to/output -f # Clean custom output directory
 ## 🧪 Quality Assurance & Tooling
 
 ```bash
-# Run test suite (75 automated tests)
-pytest -v
-
-# Run Ruff linter and code formatter
-ruff check --fix .
-ruff format .
-
-# Verify pre-commit hooks across all files
-pre-commit run --all-files
+pytest -v                 # Run test suite
+ruff check --fix .        # Lint and auto-fix code
+ruff format .             # Format code
+pre-commit run --all-files # Verify pre-commit hooks across all files
 ```
 
 ---
 
 ## 🤝 Documentation, Contributing & License
 
-For in-depth operational and architectural details, please explore our guides:
 - 📘 [Operational Architecture Guide (English)](docs/GUIDE_EN.md) — Comprehensive guide to ingestion, heuristics, math invariants, and outputs.
 - 🇪🇸 [Guía de Arquitectura y Operación (Español)](docs/GUIDE_ES.md) — Guía completa sobre el canal de ingesta, cálculo de reparto, heurísticas y salidas.
-
-Contributions are welcome. Please consult:
-- 📘 [CONTRIBUTING.md](CONTRIBUTING.md) — Coding conventions, Conventional Commits specification, and PR workflow.
+- 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines, Conventional Commits, and PR workflow.
 - 🤖 [AGENTS.md](AGENTS.md) — Technical instructions and architectural guidelines for AI agents and developers.
-
-This project is licensed under the [MIT License](LICENSE).
+- 📄 [LICENSE](LICENSE) — Licensed under the [MIT License](LICENSE).
 
 ---
 
 ## 🤖 AI Development & Vibe Coding Disclosure
 
-This project was developed using a **vibe coding** workflow, pairing natural language direction with agentic code generation and automated quality verification:
-
-- **🛠️ Agentic IDE:** Google Antigravity IDE (Advanced Agentic Coding environment by Google DeepMind).
+Developed via a **vibe coding** workflow pairing natural language direction with agentic code generation:
+- **🛠️ Agentic IDE:** Google Antigravity IDE (DeepMind Advanced Agentic Coding).
 - **🧠 Models:** Google Gemini (Gemini Flash 3.8 in High reasoning).
-- **🛡️ Governance & Quality Assurance:**
-  - Automated validation with several unit, integration, and CLI tests via **Pytest**.
-  - Strict pre-commit enforcement with **Ruff** for linting and code formatting.
-  - Domain invariant guarantees (100.00% fair-share mathematical sum).
-  - Absolute anonymization protocols for residential energy data.
+- **🛡️ Quality Assurance:** Automated test suite via Pytest, strict Ruff linting, 100.00% fair-share math invariants, and zero-leakage CUPS privacy enforcement.
