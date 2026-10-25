@@ -28,7 +28,7 @@ DATADIS export files contain private household data (supply point locations, con
 ## 2. 🛠️ Development Environment Setup
 
 ### Prerequisites
-- **Python:** 3.11+ (Python 3.12 and 3.14 supported)
+- **Python:** 3.14+ (Python 3.14 and 3.15 supported)
 - **Git:** 2.30+
 
 ### Setup Commands

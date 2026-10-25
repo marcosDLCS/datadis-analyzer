@@ -22,7 +22,7 @@ class DatadisValidator:
                     # Read a representative chunk to ensure encoding validity
                     f.read(8192)
                 return encoding
-            except (UnicodeDecodeError, LookupError):
+            except UnicodeDecodeError, LookupError:
                 continue
         return "latin-1"
 

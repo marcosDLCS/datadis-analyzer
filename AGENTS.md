@@ -39,7 +39,7 @@ The codebase follows a modular pipeline across distinct component boundaries:
 
 | Component | Technology | Standard / Role |
 | :--- | :--- | :--- |
-| **Runtime** | Python 3.11+ | Modern typing, native union types (`X \| Y`) |
+| **Runtime** | Python 3.14+ | Modern typing, native union types (`X \| Y`) |
 | **CLI & UI** | Typer & Rich | Command parser, 80-column tables, visual bars |
 | **Data & Charts** | Pandas & Matplotlib | CSV normalization, time-series grouping, headless PNG charts |
 | **Versioning** | CalVer (`YYYY.MM.NNN`) | Automated per-commit version increments |

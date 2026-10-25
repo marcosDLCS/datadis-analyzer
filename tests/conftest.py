@@ -21,7 +21,7 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def guard_production_output_directory() -> Generator[None, None, None]:
+def guard_production_output_directory() -> Generator[None]:
     """Ensure production .output directory is never polluted during test execution."""
     real_output_dir = Path(".output")
     initial_files = set(real_output_dir.glob("*")) if real_output_dir.exists() else set()
